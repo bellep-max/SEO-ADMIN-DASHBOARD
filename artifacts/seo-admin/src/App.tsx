@@ -10,7 +10,6 @@ import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
 import ClientDetail from "@/pages/client-detail";
 import Plans from "@/pages/plans";
-import Businesses from "@/pages/businesses";
 import Campaigns from "@/pages/campaigns";
 import CampaignDetail from "@/pages/campaign-detail";
 import Keywords from "@/pages/keywords";
@@ -30,7 +29,6 @@ function ProtectedRoutes() {
         <Route path="/clients" component={Clients} />
         <Route path="/clients/:id" component={ClientDetail} />
         <Route path="/plans" component={Plans} />
-        <Route path="/businesses" component={Businesses} />
         <Route path="/campaigns" component={Campaigns} />
         <Route path="/campaigns/:id" component={CampaignDetail} />
         <Route path="/keywords" component={Keywords} />

@@ -6,9 +6,6 @@ import {
   useGetClientCampaigns,
   useGetClientKeywords,
   useGetClientBacklinks,
-  useGetClientBusiness,
-  useCreateBusiness,
-  useUpdateBusiness,
   useListPlans,
   useCreateCampaign,
   getGetClientQueryKey,
@@ -16,7 +13,7 @@ import {
   ClientStatus,
   CampaignStatus,
 } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +28,22 @@ import { Loader2, ExternalLink, ArrowUp, ArrowDown, Minus, Plus, Building2, MapP
 
 const GMB_CATEGORIES = ["Plumber", "Electrician", "Café", "Restaurant", "Dentist", "Lawyer", "HVAC", "Landscaping", "Cleaning", "Auto Repair", "Gym", "Salon", "Flooring", "Roofing", "Other"];
 
+function apiFetch(url: string, opts?: RequestInit) {
+  const token = localStorage.getItem("seo_admin_token");
+  return fetch(url, {
+    ...opts,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...opts?.headers,
+    },
+  }).then(async (res) => {
+    if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));
+    if (res.status === 204) return null;
+    return res.json();
+  });
+}
+
 export default function ClientDetail() {
   const { id } = useParams();
   const clientId = id ? parseInt(id) : 0;
@@ -40,14 +53,26 @@ export default function ClientDetail() {
   const { data: keywords } = useGetClientKeywords(clientId, { query: { enabled: !!clientId } });
   const { data: backlinks } = useGetClientBacklinks(clientId, { query: { enabled: !!clientId } });
   const { data: plans } = useListPlans();
-  const { data: business, isError: noBusinessYet } = useGetClientBusiness(clientId, {
-    query: { enabled: !!clientId, retry: false, throwOnError: false }
+  const { data: business, isError: noBusinessYet } = useQuery({
+    queryKey: [`/api/clients/${clientId}/business`],
+    queryFn: () => apiFetch(`/api/clients/${clientId}/business`),
+    enabled: !!clientId,
+    retry: false,
+    throwOnError: false,
   });
 
   const updateClient = useUpdateClient();
   const createCampaign = useCreateCampaign();
-  const createBusiness = useCreateBusiness();
-  const updateBusiness = useUpdateBusiness();
+
+  const createBusiness = useMutation({
+    mutationFn: ({ data }: { data: Record<string, unknown> }) =>
+      apiFetch("/api/businesses", { method: "POST", body: JSON.stringify(data) }),
+  });
+
+  const updateBusiness = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Record<string, unknown> }) =>
+      apiFetch(`/api/businesses/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
