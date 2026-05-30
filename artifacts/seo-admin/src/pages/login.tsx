@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Target, Loader2 } from "lucide-react";
+import { Signal, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
@@ -34,9 +34,9 @@ export default function Login() {
       <Card className="w-full max-w-md border-border shadow-xl">
         <CardHeader className="space-y-3 text-center pb-8">
           <div className="mx-auto bg-primary/10 w-12 h-12 rounded-full flex items-center justify-center mb-2">
-            <Target className="w-6 h-6 text-primary" />
+            <Signal className="w-6 h-6 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">SEO Command Center</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">Signal SEO Command Center</CardTitle>
           <CardDescription>Enter your admin credentials to continue</CardDescription>
         </CardHeader>
         <CardContent>

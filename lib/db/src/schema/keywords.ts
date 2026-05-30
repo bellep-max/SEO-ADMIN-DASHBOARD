@@ -1,4 +1,4 @@
-import { pgTable, text, serial, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { campaignsTable } from "./campaigns";
@@ -10,6 +10,8 @@ export const keywordsTable = pgTable("keywords", {
   currentRank: integer("current_rank"),
   previousRank: integer("previous_rank"),
   searchVolume: integer("search_volume"),
+  isVerified: boolean("is_verified").notNull().default(false),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
   lastUpdated: timestamp("last_updated", { withTimezone: true }).notNull().defaultNow(),
 });
 

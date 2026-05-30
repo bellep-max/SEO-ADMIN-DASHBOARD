@@ -233,6 +233,9 @@ export interface Keyword {
   searchVolume?: number | null;
   /** @nullable */
   rankChange?: number | null;
+  isVerified: boolean;
+  /** @nullable */
+  verifiedAt?: string | null;
   lastUpdated: string;
 }
 

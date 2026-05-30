@@ -670,6 +670,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/Keyword"
 
+  /keywords/{id}/verify:
+    post:
+      operationId: verifyKeyword
+      tags: [keywords]
+      summary: Mark a keyword as verified via Falcon provisioning
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Verified keyword
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Keyword"
+
+  /keywords/{id}/unverify:
+    post:
+      operationId: unverifyKeyword
+      tags: [keywords]
+      summary: Remove verification from a keyword
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unverified keyword
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Keyword"
+
   # Backlinks
   /backlinks:
     get:
@@ -1202,7 +1240,7 @@ components:
 
     Keyword:
       type: object
-      required: [id, campaignId, keywordText, lastUpdated]
+      required: [id, campaignId, keywordText, lastUpdated, isVerified]
       properties:
         id:
           type: integer
@@ -1222,6 +1260,10 @@ components:
           type: ["integer", "null"]
         rankChange:
           type: ["integer", "null"]
+        isVerified:
+          type: boolean
+        verifiedAt:
+          type: ["string", "null"]
         lastUpdated:
           type: string
 

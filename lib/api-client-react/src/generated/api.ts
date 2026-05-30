@@ -2693,6 +2693,146 @@ export const useRefreshKeywordRank = <TError = ErrorType<unknown>,
       return useMutation(getRefreshKeywordRankMutationOptions(options));
     }
 
+export const getVerifyKeywordUrl = (id: number,) => {
+
+
+
+
+  return `/api/keywords/${id}/verify`
+}
+
+/**
+ * @summary Mark a keyword as verified via Falcon provisioning
+ */
+export const verifyKeyword = async (id: number, options?: RequestInit): Promise<Keyword> => {
+
+  return customFetch<Keyword>(getVerifyKeywordUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getVerifyKeywordMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyKeyword>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyKeyword>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['verifyKeyword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyKeyword>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  verifyKeyword(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyKeywordMutationResult = NonNullable<Awaited<ReturnType<typeof verifyKeyword>>>
+
+    export type VerifyKeywordMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark a keyword as verified via Falcon provisioning
+ */
+export const useVerifyKeyword = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyKeyword>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof verifyKeyword>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getVerifyKeywordMutationOptions(options));
+    }
+
+export const getUnverifyKeywordUrl = (id: number,) => {
+
+
+
+
+  return `/api/keywords/${id}/unverify`
+}
+
+/**
+ * @summary Remove verification from a keyword
+ */
+export const unverifyKeyword = async (id: number, options?: RequestInit): Promise<Keyword> => {
+
+  return customFetch<Keyword>(getUnverifyKeywordUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getUnverifyKeywordMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unverifyKeyword>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unverifyKeyword>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['unverifyKeyword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unverifyKeyword>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  unverifyKeyword(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnverifyKeywordMutationResult = NonNullable<Awaited<ReturnType<typeof unverifyKeyword>>>
+
+    export type UnverifyKeywordMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Remove verification from a keyword
+ */
+export const useUnverifyKeyword = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unverifyKeyword>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unverifyKeyword>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getUnverifyKeywordMutationOptions(options));
+    }
+
 export const getListBacklinksUrl = (params?: ListBacklinksParams,) => {
   const normalizedParams = new URLSearchParams();
 

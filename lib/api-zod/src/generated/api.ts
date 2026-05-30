@@ -234,6 +234,8 @@ export const GetClientKeywordsResponseItem = zod.object({
   "previousRank": zod.number().nullish(),
   "searchVolume": zod.number().nullish(),
   "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
   "lastUpdated": zod.string()
 })
 export const GetClientKeywordsResponse = zod.array(GetClientKeywordsResponseItem)
@@ -452,6 +454,8 @@ export const GetCampaignKeywordsResponseItem = zod.object({
   "previousRank": zod.number().nullish(),
   "searchVolume": zod.number().nullish(),
   "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
   "lastUpdated": zod.string()
 })
 export const GetCampaignKeywordsResponse = zod.array(GetCampaignKeywordsResponseItem)
@@ -474,6 +478,8 @@ export const ListKeywordsResponseItem = zod.object({
   "previousRank": zod.number().nullish(),
   "searchVolume": zod.number().nullish(),
   "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
   "lastUpdated": zod.string()
 })
 export const ListKeywordsResponse = zod.array(ListKeywordsResponseItem)
@@ -517,6 +523,8 @@ export const GetKeywordResponse = zod.object({
   "previousRank": zod.number().nullish(),
   "searchVolume": zod.number().nullish(),
   "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
   "lastUpdated": zod.string()
 })
 
@@ -545,6 +553,8 @@ export const UpdateKeywordResponse = zod.object({
   "previousRank": zod.number().nullish(),
   "searchVolume": zod.number().nullish(),
   "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
   "lastUpdated": zod.string()
 })
 
@@ -588,6 +598,54 @@ export const RefreshKeywordRankResponse = zod.object({
   "previousRank": zod.number().nullish(),
   "searchVolume": zod.number().nullish(),
   "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
+  "lastUpdated": zod.string()
+})
+
+
+/**
+ * @summary Mark a keyword as verified via Falcon provisioning
+ */
+export const VerifyKeywordParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const VerifyKeywordResponse = zod.object({
+  "id": zod.number(),
+  "campaignId": zod.number(),
+  "campaignName": zod.string().nullish(),
+  "clientName": zod.string().nullish(),
+  "keywordText": zod.string(),
+  "currentRank": zod.number().nullish(),
+  "previousRank": zod.number().nullish(),
+  "searchVolume": zod.number().nullish(),
+  "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
+  "lastUpdated": zod.string()
+})
+
+
+/**
+ * @summary Remove verification from a keyword
+ */
+export const UnverifyKeywordParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UnverifyKeywordResponse = zod.object({
+  "id": zod.number(),
+  "campaignId": zod.number(),
+  "campaignName": zod.string().nullish(),
+  "clientName": zod.string().nullish(),
+  "keywordText": zod.string(),
+  "currentRank": zod.number().nullish(),
+  "previousRank": zod.number().nullish(),
+  "searchVolume": zod.number().nullish(),
+  "rankChange": zod.number().nullish(),
+  "isVerified": zod.boolean(),
+  "verifiedAt": zod.string().nullish(),
   "lastUpdated": zod.string()
 })
 

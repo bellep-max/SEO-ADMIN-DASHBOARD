@@ -18,6 +18,8 @@ import {
   GetKeywordHistoryResponse,
   RefreshKeywordRankParams,
   RefreshKeywordRankResponse,
+  VerifyKeywordParams,
+  UnverifyKeywordParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -40,6 +42,7 @@ async function formatKeyword(k: typeof keywordsTable.$inferSelect) {
     clientName,
     rankChange: k.previousRank != null && k.currentRank != null ? k.previousRank - k.currentRank : null,
     lastUpdated: k.lastUpdated.toISOString(),
+    verifiedAt: k.verifiedAt?.toISOString() ?? null,
   };
 }
 
@@ -117,6 +120,26 @@ router.get("/keywords/:id/history", requireAuth, async (req, res): Promise<void>
   res.json(GetKeywordHistoryResponse.parse(
     history.map(h => ({ date: h.recordedAt.toISOString(), rank: h.rank }))
   ));
+});
+
+router.post("/keywords/:id/verify", requireAuth, async (req, res): Promise<void> => {
+  const params = VerifyKeywordParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
+  const id = parseId(params.data.id);
+  const [existing] = await db.select().from(keywordsTable).where(eq(keywordsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Keyword not found" }); return; }
+  const [updated] = await db.update(keywordsTable).set({ isVerified: true, verifiedAt: new Date(), lastUpdated: new Date() }).where(eq(keywordsTable.id, id)).returning();
+  res.json(GetKeywordResponse.parse(await formatKeyword(updated)));
+});
+
+router.post("/keywords/:id/unverify", requireAuth, async (req, res): Promise<void> => {
+  const params = UnverifyKeywordParams.safeParse(req.params);
+  if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
+  const id = parseId(params.data.id);
+  const [existing] = await db.select().from(keywordsTable).where(eq(keywordsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Keyword not found" }); return; }
+  const [updated] = await db.update(keywordsTable).set({ isVerified: false, verifiedAt: null, lastUpdated: new Date() }).where(eq(keywordsTable.id, id)).returning();
+  res.json(GetKeywordResponse.parse(await formatKeyword(updated)));
 });
 
 router.post("/keywords/:id/refresh", requireAuth, async (req, res): Promise<void> => {
