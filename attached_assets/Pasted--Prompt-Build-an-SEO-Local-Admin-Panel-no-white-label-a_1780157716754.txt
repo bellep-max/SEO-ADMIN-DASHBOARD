@@ -1,0 +1,120 @@
+# Prompt: Build an SEO Local Admin Panel (no white-label, admin-only)
+
+## Objective
+Create a complete web application for an **internal SEO admin dashboard**.  
+The admin can manage clients, service plans, campaigns, keywords, backlinks, and generate reports.  
+**No client login, no white-labeling, no reseller features.** Only a single admin user (with authentication).
+
+## Tech Stack (suggested)
+- Backend: Node.js + Express.js (or Laravel / Django)
+- Frontend: React (or Vue) with Tailwind CSS for styling
+- Database: PostgreSQL (or MySQL)
+- Authentication: JWT + bcrypt (admin email/password)
+- API: RESTful (or GraphQL)
+
+## Core Modules & Requirements
+
+### 1. Authentication
+- Admin login page (email + password)
+- Protect all admin routes with JWT middleware
+- Logout and session expiration
+- Seed default admin account (admin@example.com / admin123)
+
+### 2. Dashboard (Business Overview)
+- Summary cards:
+  - Total Clients
+  - Active Campaigns
+  - Total Keywords Tracked
+  - New Backlinks (last 30 days)
+- Recent activity log (e.g., last 5 client additions, ranking changes)
+- Simple monthly revenue chart (based on assigned plans)
+
+### 3. Clients Management
+**Data fields per client:**
+- id, name, email, company, website URL
+- assigned_plan_id (FK to Plans), status (active/inactive)
+- created_at, updated_at
+
+**Features:**
+- List clients with search (name/email) and pagination
+- Create / Edit / Delete client
+- View client details with tabs:
+  - Campaigns (list of campaigns under this client)
+  - Keywords (all keywords across campaigns)
+  - Backlinks (all backlinks for the client’s website)
+- Assign / change plan (from Plans list)
+- Toggle status (active/inactive)
+
+### 4. Plans Management
+**Data fields:**
+- id, name (e.g., “Starter”, “Pro”)
+- price (monthly, for internal reference)
+- keyword_limit (max keywords per campaign)
+- backlink_check_limit (max backlink checks per month)
+- audit_limit (max site audits per month – optional)
+- created_at
+
+**Features:**
+- CRUD for plans
+- When a client is assigned a plan, enforce limits in UI/API (e.g., prevent adding more keywords than allowed)
+
+### 5. Campaigns Management
+**Data fields:**
+- id, client_id (FK), name, target_domain, target_location (e.g., “US”), target_language (e.g., “en”)
+- status (active / paused / completed)
+- created_at
+
+**Features:**
+- List campaigns with filter by client
+- Create campaign (must select a client)
+- Edit / Pause / Delete campaign
+- View campaign details: shows all keywords + ranking history for that campaign
+
+### 6. Keywords Management
+**Data fields:**
+- id, campaign_id (FK), keyword_text, current_rank (position), previous_rank, search_volume (optional)
+- last_updated (timestamp)
+
+**Features:**
+- Within a campaign, add single keyword or bulk upload (CSV)
+- List all keywords across all campaigns (admin view)
+- For each keyword, show:
+  - Current position, change (↑/↓), rank history chart (last 30 days)
+  - Clickable to see daily ranking timeline
+- Manual trigger to refresh rankings (call a mock API or simulate update)
+- **Alerts** (internal notification bell): show when any keyword drops >10 positions
+
+### 7. Backlinks Management
+**Data fields:**
+- id, client_id (FK), source_url, target_url, anchor_text, authority_score (1-100)
+- is_toxic (boolean), status (new / lost)
+- first_detected, last_seen
+
+**Features:**
+- Import backlinks manually or via CSV
+- List backlinks per client website
+- Show new vs lost backlinks over time (simple chart)
+- Mark as toxic → generate disavow suggestion list (plain text export)
+- Competitor analysis: admin can add competitor domains (separate table `competitors`) and compare backlink counts.
+
+### 8. Reports (internal only)
+**Features:**
+- Generate PDF/CSV report for a specific client + campaign
+- Report includes:
+  - Client info & campaign details
+  - Top 10 keywords with current ranks & change
+  - Top 10 new backlinks (last 30 days)
+  - Brief summary (generated via template)
+- Schedule monthly report (optional): send to admin email only, not to client
+
+## Database Schema Outline (minimum)
+```sql
+users (admin account)
+clients
+plans
+campaigns
+keywords
+keyword_rank_history (date, rank)
+backlinks
+competitors (optional)
+reports (stored report metadata)

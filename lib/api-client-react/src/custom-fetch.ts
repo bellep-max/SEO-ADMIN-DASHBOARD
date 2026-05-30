@@ -357,6 +357,13 @@ export async function customFetch<T = unknown>(
       headers.set("authorization", `Bearer ${token}`);
     }
   }
+  
+  if (typeof window !== "undefined" && !headers.has("authorization")) {
+    const token = localStorage.getItem("seo_admin_token");
+    if (token) {
+      headers.set("authorization", `Bearer ${token}`);
+    }
+  }
 
   const requestInfo = { method, url: resolveUrl(input) };
 

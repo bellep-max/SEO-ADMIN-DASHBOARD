@@ -1,22 +1,39 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SEO Local Admin Panel API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: dashboard
+    description: Dashboard overview
+  - name: clients
+    description: Client management
+  - name: plans
+    description: Service plan management
+  - name: campaigns
+    description: Campaign management
+  - name: keywords
+    description: Keyword tracking
+  - name: backlinks
+    description: Backlink management
+  - name: competitors
+    description: Competitor tracking
+  - name: reports
+    description: Report generation
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +41,1377 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # Auth
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Admin logout
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current admin user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        "401":
+          description: Not authenticated
+
+  # Dashboard
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard summary stats
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity log
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/revenue:
+    get:
+      operationId: getDashboardRevenue
+      tags: [dashboard]
+      summary: Get monthly revenue chart data
+      responses:
+        "200":
+          description: Monthly revenue data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RevenueDataPoint"
+
+  /dashboard/keyword-alerts:
+    get:
+      operationId: getKeywordAlerts
+      tags: [dashboard]
+      summary: Get keywords with significant rank drops
+      responses:
+        "200":
+          description: Keyword alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/KeywordAlert"
+
+  # Clients
+  /clients:
+    get:
+      operationId: listClients
+      tags: [clients]
+      summary: List all clients
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientsPage"
+    post:
+      operationId: createClient
+      tags: [clients]
+      summary: Create a new client
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+
+  /clients/{id}:
+    get:
+      operationId: getClient
+      tags: [clients]
+      summary: Get a single client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateClient
+      tags: [clients]
+      summary: Update a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientUpdate"
+      responses:
+        "200":
+          description: Updated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+    delete:
+      operationId: deleteClient
+      tags: [clients]
+      summary: Delete a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /clients/{id}/campaigns:
+    get:
+      operationId: getClientCampaigns
+      tags: [clients]
+      summary: Get all campaigns for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+
+  /clients/{id}/keywords:
+    get:
+      operationId: getClientKeywords
+      tags: [clients]
+      summary: Get all keywords for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client keywords
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Keyword"
+
+  /clients/{id}/backlinks:
+    get:
+      operationId: getClientBacklinks
+      tags: [clients]
+      summary: Get all backlinks for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Client backlinks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Backlink"
+
+  # Plans
+  /plans:
+    get:
+      operationId: listPlans
+      tags: [plans]
+      summary: List all plans
+      responses:
+        "200":
+          description: List of plans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Plan"
+    post:
+      operationId: createPlan
+      tags: [plans]
+      summary: Create a plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+
+  /plans/{id}:
+    get:
+      operationId: getPlan
+      tags: [plans]
+      summary: Get a plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Plan details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+    patch:
+      operationId: updatePlan
+      tags: [plans]
+      summary: Update a plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PlanUpdate"
+      responses:
+        "200":
+          description: Updated plan
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+    delete:
+      operationId: deletePlan
+      tags: [plans]
+      summary: Delete a plan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Campaigns
+  /campaigns:
+    get:
+      operationId: listCampaigns
+      tags: [campaigns]
+      summary: List all campaigns
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Campaign"
+    post:
+      operationId: createCampaign
+      tags: [campaigns]
+      summary: Create a campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+
+  /campaigns/{id}:
+    get:
+      operationId: getCampaign
+      tags: [campaigns]
+      summary: Get a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+    patch:
+      operationId: updateCampaign
+      tags: [campaigns]
+      summary: Update a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CampaignUpdate"
+      responses:
+        "200":
+          description: Updated campaign
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Campaign"
+    delete:
+      operationId: deleteCampaign
+      tags: [campaigns]
+      summary: Delete a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /campaigns/{id}/keywords:
+    get:
+      operationId: getCampaignKeywords
+      tags: [campaigns]
+      summary: Get all keywords for a campaign
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Campaign keywords
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Keyword"
+
+  # Keywords
+  /keywords:
+    get:
+      operationId: listKeywords
+      tags: [keywords]
+      summary: List all keywords
+      parameters:
+        - name: campaignId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of keywords
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Keyword"
+    post:
+      operationId: createKeyword
+      tags: [keywords]
+      summary: Add a keyword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KeywordInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Keyword"
+
+  /keywords/bulk:
+    post:
+      operationId: bulkCreateKeywords
+      tags: [keywords]
+      summary: Bulk add keywords
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KeywordBulkInput"
+      responses:
+        "201":
+          description: Bulk created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Keyword"
+
+  /keywords/{id}:
+    get:
+      operationId: getKeyword
+      tags: [keywords]
+      summary: Get a keyword
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Keyword details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Keyword"
+    patch:
+      operationId: updateKeyword
+      tags: [keywords]
+      summary: Update a keyword
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/KeywordUpdate"
+      responses:
+        "200":
+          description: Updated keyword
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Keyword"
+    delete:
+      operationId: deleteKeyword
+      tags: [keywords]
+      summary: Delete a keyword
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /keywords/{id}/history:
+    get:
+      operationId: getKeywordHistory
+      tags: [keywords]
+      summary: Get rank history for a keyword
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Rank history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RankHistoryPoint"
+
+  /keywords/{id}/refresh:
+    post:
+      operationId: refreshKeywordRank
+      tags: [keywords]
+      summary: Manually refresh keyword rank
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated keyword
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Keyword"
+
+  # Backlinks
+  /backlinks:
+    get:
+      operationId: listBacklinks
+      tags: [backlinks]
+      summary: List all backlinks
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of backlinks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Backlink"
+    post:
+      operationId: createBacklink
+      tags: [backlinks]
+      summary: Add a backlink
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BacklinkInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backlink"
+
+  /backlinks/bulk:
+    post:
+      operationId: bulkCreateBacklinks
+      tags: [backlinks]
+      summary: Bulk import backlinks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BacklinkBulkInput"
+      responses:
+        "201":
+          description: Bulk created
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Backlink"
+
+  /backlinks/chart:
+    get:
+      operationId: getBacklinksChart
+      tags: [backlinks]
+      summary: Get new vs lost backlinks over time
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Backlinks chart data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BacklinkChartPoint"
+
+  /backlinks/disavow:
+    get:
+      operationId: getDisavowList
+      tags: [backlinks]
+      summary: Get disavow list for toxic backlinks
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Disavow list text
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DisavowList"
+
+  /backlinks/{id}:
+    patch:
+      operationId: updateBacklink
+      tags: [backlinks]
+      summary: Update a backlink
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BacklinkUpdate"
+      responses:
+        "200":
+          description: Updated backlink
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Backlink"
+    delete:
+      operationId: deleteBacklink
+      tags: [backlinks]
+      summary: Delete a backlink
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Competitors
+  /competitors:
+    get:
+      operationId: listCompetitors
+      tags: [competitors]
+      summary: List competitors
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of competitors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Competitor"
+    post:
+      operationId: createCompetitor
+      tags: [competitors]
+      summary: Add a competitor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompetitorInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competitor"
+
+  /competitors/{id}:
+    delete:
+      operationId: deleteCompetitor
+      tags: [competitors]
+      summary: Delete a competitor
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # Reports
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List reports
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Generate a report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      summary: Get a report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/AdminUser"
+
+    AdminUser:
+      type: object
+      required: [id, email]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        createdAt:
+          type: string
+
+    DashboardStats:
+      type: object
+      required: [totalClients, activeCampaigns, totalKeywords, newBacklinks30d]
+      properties:
+        totalClients:
+          type: integer
+        activeClients:
+          type: integer
+        activeCampaigns:
+          type: integer
+        totalKeywords:
+          type: integer
+        newBacklinks30d:
+          type: integer
+        totalRevenue:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, description, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        entityId:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    RevenueDataPoint:
+      type: object
+      required: [month, revenue]
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+
+    KeywordAlert:
+      type: object
+      required: [keywordId, keywordText, campaignName, clientName, previousRank, currentRank, drop]
+      properties:
+        keywordId:
+          type: integer
+        keywordText:
+          type: string
+        campaignName:
+          type: string
+        clientName:
+          type: string
+        previousRank:
+          type: ["integer", "null"]
+        currentRank:
+          type: ["integer", "null"]
+        drop:
+          type: integer
+
+    Client:
+      type: object
+      required: [id, name, email, status, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        company:
+          type: ["string", "null"]
+        websiteUrl:
+          type: ["string", "null"]
+        assignedPlanId:
+          type: ["integer", "null"]
+        planName:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, inactive]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    ClientInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        company:
+          type: string
+        websiteUrl:
+          type: string
+        assignedPlanId:
+          type: integer
+        status:
+          type: string
+          enum: [active, inactive]
+
+    ClientUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        company:
+          type: string
+        websiteUrl:
+          type: string
+        assignedPlanId:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, inactive]
+
+    ClientsPage:
+      type: object
+      required: [clients, total, page, limit]
+      properties:
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Client"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    Plan:
+      type: object
+      required: [id, name, price, keywordLimit, backlinkCheckLimit, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: number
+        keywordLimit:
+          type: integer
+        backlinkCheckLimit:
+          type: integer
+        auditLimit:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    PlanInput:
+      type: object
+      required: [name, price, keywordLimit, backlinkCheckLimit]
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        keywordLimit:
+          type: integer
+        backlinkCheckLimit:
+          type: integer
+        auditLimit:
+          type: integer
+
+    PlanUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        keywordLimit:
+          type: integer
+        backlinkCheckLimit:
+          type: integer
+        auditLimit:
+          type: ["integer", "null"]
+
+    Campaign:
+      type: object
+      required: [id, clientId, name, targetDomain, status, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        name:
+          type: string
+        targetDomain:
+          type: string
+        targetLocation:
+          type: ["string", "null"]
+        targetLanguage:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, paused, completed]
+        keywordCount:
+          type: integer
+        createdAt:
+          type: string
+
+    CampaignInput:
+      type: object
+      required: [clientId, name, targetDomain]
+      properties:
+        clientId:
+          type: integer
+        name:
+          type: string
+        targetDomain:
+          type: string
+        targetLocation:
+          type: string
+        targetLanguage:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, completed]
+
+    CampaignUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        targetDomain:
+          type: string
+        targetLocation:
+          type: ["string", "null"]
+        targetLanguage:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [active, paused, completed]
+
+    Keyword:
+      type: object
+      required: [id, campaignId, keywordText, lastUpdated]
+      properties:
+        id:
+          type: integer
+        campaignId:
+          type: integer
+        campaignName:
+          type: ["string", "null"]
+        clientName:
+          type: ["string", "null"]
+        keywordText:
+          type: string
+        currentRank:
+          type: ["integer", "null"]
+        previousRank:
+          type: ["integer", "null"]
+        searchVolume:
+          type: ["integer", "null"]
+        rankChange:
+          type: ["integer", "null"]
+        lastUpdated:
+          type: string
+
+    KeywordInput:
+      type: object
+      required: [campaignId, keywordText]
+      properties:
+        campaignId:
+          type: integer
+        keywordText:
+          type: string
+        currentRank:
+          type: integer
+        previousRank:
+          type: integer
+        searchVolume:
+          type: integer
+
+    KeywordUpdate:
+      type: object
+      properties:
+        keywordText:
+          type: string
+        currentRank:
+          type: ["integer", "null"]
+        previousRank:
+          type: ["integer", "null"]
+        searchVolume:
+          type: ["integer", "null"]
+
+    KeywordBulkInput:
+      type: object
+      required: [campaignId, keywords]
+      properties:
+        campaignId:
+          type: integer
+        keywords:
+          type: array
+          items:
+            type: string
+
+    RankHistoryPoint:
+      type: object
+      required: [date, rank]
+      properties:
+        date:
+          type: string
+        rank:
+          type: ["integer", "null"]
+
+    Backlink:
+      type: object
+      required: [id, clientId, sourceUrl, targetUrl, status, firstDetected]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        sourceUrl:
+          type: string
+        targetUrl:
+          type: string
+        anchorText:
+          type: ["string", "null"]
+        authorityScore:
+          type: ["integer", "null"]
+        isToxic:
+          type: boolean
+        status:
+          type: string
+          enum: [new, lost]
+        firstDetected:
+          type: string
+        lastSeen:
+          type: ["string", "null"]
+
+    BacklinkInput:
+      type: object
+      required: [clientId, sourceUrl, targetUrl]
+      properties:
+        clientId:
+          type: integer
+        sourceUrl:
+          type: string
+        targetUrl:
+          type: string
+        anchorText:
+          type: string
+        authorityScore:
+          type: integer
+        isToxic:
+          type: boolean
+        status:
+          type: string
+          enum: [new, lost]
+
+    BacklinkUpdate:
+      type: object
+      properties:
+        anchorText:
+          type: ["string", "null"]
+        authorityScore:
+          type: ["integer", "null"]
+        isToxic:
+          type: boolean
+        status:
+          type: string
+          enum: [new, lost]
+
+    BacklinkBulkInput:
+      type: object
+      required: [clientId, backlinks]
+      properties:
+        clientId:
+          type: integer
+        backlinks:
+          type: array
+          items:
+            $ref: "#/components/schemas/BacklinkInput"
+
+    BacklinkChartPoint:
+      type: object
+      required: [date, newCount, lostCount]
+      properties:
+        date:
+          type: string
+        newCount:
+          type: integer
+        lostCount:
+          type: integer
+
+    DisavowList:
+      type: object
+      required: [content, count]
+      properties:
+        content:
+          type: string
+        count:
+          type: integer
+
+    Competitor:
+      type: object
+      required: [id, clientId, domain, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        domain:
+          type: string
+        backlinkCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    CompetitorInput:
+      type: object
+      required: [clientId, domain]
+      properties:
+        clientId:
+          type: integer
+        domain:
+          type: string
+
+    Report:
+      type: object
+      required: [id, clientId, campaignId, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        clientName:
+          type: ["string", "null"]
+        campaignId:
+          type: integer
+        campaignName:
+          type: ["string", "null"]
+        summary:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    ReportInput:
+      type: object
+      required: [clientId, campaignId]
+      properties:
+        clientId:
+          type: integer
+        campaignId:
+          type: integer
