@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useLogout, useGetMe } from "@workspace/api-client-react";
+import { useEffect } from "react";
 import {
   LayoutDashboard, Users, CreditCard, Target, Key, Link as LinkIcon,
   Swords, FileBarChart, LogOut, Loader2, Moon, Sun, Zap, CheckCircle2, Signal, Building2
@@ -26,17 +27,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const logout = useLogout();
   const { theme, toggle } = useTheme();
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading && !user) {
+      setLocation("/login");
+    }
+  }, [isLoading, user, setLocation]);
+
+  if (isLoading || !user) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
-  }
-
-  if (!user) {
-    setLocation("/login");
-    return null;
   }
 
   const handleLogout = () => {
