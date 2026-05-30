@@ -13,7 +13,6 @@ import {
   useCreateCampaign,
   getGetClientQueryKey,
   getGetClientCampaignsQueryKey,
-  getGetClientBusinessQueryKey,
   ClientStatus,
   CampaignStatus,
 } from "@workspace/api-client-react";
@@ -42,7 +41,7 @@ export default function ClientDetail() {
   const { data: backlinks } = useGetClientBacklinks(clientId, { query: { enabled: !!clientId } });
   const { data: plans } = useListPlans();
   const { data: business, isError: noBusinessYet } = useGetClientBusiness(clientId, {
-    query: { enabled: !!clientId, retry: false }
+    query: { enabled: !!clientId, retry: false, throwOnError: false }
   });
 
   const updateClient = useUpdateClient();
@@ -92,7 +91,7 @@ export default function ClientDetail() {
         }
       }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetClientBusinessQueryKey(clientId) });
+          queryClient.invalidateQueries({ queryKey: [`/api/clients/${clientId}/business`] });
           setIsBusinessEditing(false);
           toast({ title: "Business profile updated" });
         },
@@ -112,7 +111,7 @@ export default function ClientDetail() {
         }
       }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetClientBusinessQueryKey(clientId) });
+          queryClient.invalidateQueries({ queryKey: [`/api/clients/${clientId}/business`] });
           setIsBusinessEditing(false);
           toast({ title: "Business profile created" });
         },
