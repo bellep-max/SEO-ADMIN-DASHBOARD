@@ -11,7 +11,6 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/plans", label: "Plans", icon: CreditCard },
-  { href: "/businesses", label: "Businesses", icon: Building2 },
   { href: "/campaigns", label: "Campaigns", icon: Target },
   { href: "/keywords", label: "Keywords", icon: Key },
   { href: "/verified-keywords", label: "Verified Keywords", icon: CheckCircle2 },
