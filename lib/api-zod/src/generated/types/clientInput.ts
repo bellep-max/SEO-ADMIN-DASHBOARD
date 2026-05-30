@@ -11,6 +11,7 @@ export interface ClientInput {
   name: string;
   email: string;
   company?: string;
+  phone?: string;
   websiteUrl?: string;
   assignedPlanId?: number;
   status?: ClientInputStatus;

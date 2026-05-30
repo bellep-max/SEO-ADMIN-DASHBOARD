@@ -75,6 +75,8 @@ export interface Client {
   /** @nullable */
   company?: string | null;
   /** @nullable */
+  phone?: string | null;
+  /** @nullable */
   websiteUrl?: string | null;
   /** @nullable */
   assignedPlanId?: number | null;
@@ -97,6 +99,7 @@ export interface ClientInput {
   name: string;
   email: string;
   company?: string;
+  phone?: string;
   websiteUrl?: string;
   assignedPlanId?: number;
   status?: ClientInputStatus;
@@ -114,10 +117,58 @@ export interface ClientUpdate {
   name?: string;
   email?: string;
   company?: string;
+  phone?: string;
   websiteUrl?: string;
   /** @nullable */
   assignedPlanId?: number | null;
   status?: ClientUpdateStatus;
+}
+
+export interface Business {
+  id: number;
+  clientId: number;
+  businessName: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  hours?: string | null;
+  /** @nullable */
+  gmbUrl?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface BusinessInput {
+  clientId: number;
+  businessName: string;
+  address?: string;
+  phone?: string;
+  website?: string;
+  category?: string;
+  hours?: string;
+  gmbUrl?: string;
+}
+
+export interface BusinessUpdate {
+  businessName?: string;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  website?: string | null;
+  /** @nullable */
+  category?: string | null;
+  /** @nullable */
+  hours?: string | null;
+  /** @nullable */
+  gmbUrl?: string | null;
 }
 
 export interface ClientsPage {
@@ -381,6 +432,10 @@ export type ListClientsParams = {
 search?: string;
 page?: number;
 limit?: number;
+};
+
+export type ListBusinessesParams = {
+clientId?: number;
 };
 
 export type ListCampaignsParams = {

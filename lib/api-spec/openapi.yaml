@@ -23,6 +23,8 @@ tags:
     description: Keyword tracking
   - name: backlinks
     description: Backlink management
+  - name: businesses
+    description: Business (GMB) profile management
   - name: competitors
     description: Competitor tracking
   - name: reports
@@ -397,6 +399,120 @@ paths:
       responses:
         "204":
           description: Deleted
+
+  # Businesses
+  /businesses:
+    get:
+      operationId: listBusinesses
+      tags: [businesses]
+      summary: List all businesses
+      parameters:
+        - name: clientId
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of businesses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Business"
+    post:
+      operationId: createBusiness
+      tags: [businesses]
+      summary: Create a business profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessInput"
+      responses:
+        "201":
+          description: Created business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+
+  /businesses/{id}:
+    get:
+      operationId: getBusiness
+      tags: [businesses]
+      summary: Get a business
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Business details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+    patch:
+      operationId: updateBusiness
+      tags: [businesses]
+      summary: Update a business
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BusinessUpdate"
+      responses:
+        "200":
+          description: Updated business
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+    delete:
+      operationId: deleteBusiness
+      tags: [businesses]
+      summary: Delete a business
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /clients/{id}/business:
+    get:
+      operationId: getClientBusiness
+      tags: [businesses]
+      summary: Get the business profile for a client
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Business profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Business"
+        "404":
+          description: No business for this client
 
   # Campaigns
   /campaigns:
@@ -1067,6 +1183,8 @@ components:
           type: string
         company:
           type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
         websiteUrl:
           type: ["string", "null"]
         assignedPlanId:
@@ -1091,6 +1209,8 @@ components:
           type: string
         company:
           type: string
+        phone:
+          type: string
         websiteUrl:
           type: string
         assignedPlanId:
@@ -1108,6 +1228,8 @@ components:
           type: string
         company:
           type: string
+        phone:
+          type: string
         websiteUrl:
           type: string
         assignedPlanId:
@@ -1115,6 +1237,72 @@ components:
         status:
           type: string
           enum: [active, inactive]
+
+    Business:
+      type: object
+      required: [id, clientId, businessName, createdAt]
+      properties:
+        id:
+          type: integer
+        clientId:
+          type: integer
+        businessName:
+          type: string
+        address:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        hours:
+          type: ["string", "null"]
+        gmbUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    BusinessInput:
+      type: object
+      required: [clientId, businessName]
+      properties:
+        clientId:
+          type: integer
+        businessName:
+          type: string
+        address:
+          type: string
+        phone:
+          type: string
+        website:
+          type: string
+        category:
+          type: string
+        hours:
+          type: string
+        gmbUrl:
+          type: string
+
+    BusinessUpdate:
+      type: object
+      properties:
+        businessName:
+          type: string
+        address:
+          type: ["string", "null"]
+        phone:
+          type: ["string", "null"]
+        website:
+          type: ["string", "null"]
+        category:
+          type: ["string", "null"]
+        hours:
+          type: ["string", "null"]
+        gmbUrl:
+          type: ["string", "null"]
 
     ClientsPage:
       type: object

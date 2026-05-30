@@ -1,0 +1,132 @@
+# Prompt: Build a Simple SEO Local Admin Panel (No White-Label, Admin Only)
+
+## Objective
+Build a web application for an internal SEO admin panel.  
+The admin can manage clients, plans, businesses (GMB), campaigns, keywords, and backlinks.  
+**No client login, no white-label, no reseller features.** Only one admin user with authentication.
+
+## Tech Stack (simple & common)
+- Backend: Node.js + Express.js
+- Frontend: React + Tailwind CSS
+- Database: SQLite (or PostgreSQL / MySQL)
+- Authentication: JWT + bcrypt
+
+## Core Modules & Requirements
+
+### 1. Authentication
+- Admin login page (email + password)
+- Protect all routes – redirect to login if not authenticated
+- Default admin: admin@example.com / admin123 (seed on first run)
+
+### 2. Dashboard (Overview)
+Show cards with:
+- Total Clients
+- Total Campaigns
+- Total Keywords
+- Total Backlinks
+- Simple list of recent activity (e.g., last 5 added clients)
+
+### 3. Clients Management
+Fields per client:
+- id, name, email, company, website, phone
+- assigned_plan_id (link to Plans), status (active/inactive)
+
+Features:
+- List, add, edit, delete clients
+- Search by name or email
+- View client details (shows their campaigns, keywords, backlinks)
+
+### 4. Plans Management
+Fields:
+- id, name (e.g., Basic, Pro), price (monthly), keyword_limit, backlink_limit
+
+Features:
+- CRUD for plans
+- When viewing a client, show which plan they are on
+
+### 5. Business (GMB / Google Business Profile) – Keep Simple
+Fields per business:
+- id, client_id (link to client)
+- business_name
+- address (street, city, zip - store as a single text field)
+- phone
+- website
+- category (e.g., Plumber, Cafe)
+- hours (store as simple text: "Mon-Fri 9am-5pm")
+- gmb_url (the Google Maps link, e.g., https://maps.app.goo.gl/...)
+
+Features:
+- Each client can have ONE business record (or none)
+- Simple form to add/edit business details
+- Link from client detail page to view/edit their business
+
+### 6. Campaigns Management
+Fields:
+- id, client_id, name, target_domain, target_location (e.g., "New York"), status (active/paused)
+
+Features:
+- List campaigns per client
+- Add/edit/delete campaign
+- View campaign details (shows keywords assigned to this campaign)
+
+### 7. Keywords Management
+Fields:
+- id, campaign_id, keyword_text, current_rank (position 1-100), previous_rank, search_volume (optional)
+
+Features:
+- Add keywords to a campaign (single or bulk via textarea)
+- List all keywords for a campaign with current rank
+- Simple rank update: add a button "Refresh Ranks" that randomly changes rank by -2 to +2 (mock data is fine)
+- Show rank history as a simple line chart (using Chart.js or similar)
+
+### 8. Backlinks Management
+Fields:
+- id, client_id, source_url, target_url, anchor_text, authority_score (1-100), date_found
+
+Features:
+- Add backlinks manually (form) or upload CSV
+- List backlinks per client
+- Simple flag for "toxic" (checkbox)
+
+### 9. Reports (internal only – optional but nice)
+- Generate a simple PDF report for a client + campaign showing:
+  - Client name, campaign name
+  - Top 5 keywords with current rank
+  - Top 5 backlinks
+- Use a library like jsPDF or PDFKit (mock is fine)
+
+## Database Schema (simple)
+- users (id, email, password)
+- clients (id, name, email, company, website, phone, plan_id, status)
+- plans (id, name, price, keyword_limit, backlink_limit)
+- businesses (id, client_id, business_name, address, phone, website, category, hours, gmb_url)
+- campaigns (id, client_id, name, target_domain, target_location, status)
+- keywords (id, campaign_id, keyword_text, current_rank, previous_rank, search_volume)
+- backlinks (id, client_id, source_url, target_url, anchor_text, authority_score, date_found, is_toxic)
+
+## UI / Layout
+- Sidebar menu: Dashboard, Clients, Plans, Businesses, Campaigns, Keywords, Backlinks, Reports
+- Top bar: Page title + "Admin" + Logout button
+- Use Tailwind CSS for clean and responsive design
+- All forms should be simple (text inputs, selects, buttons)
+
+## API Endpoints (RESTful, simple)
+- POST /api/login
+- GET /api/dashboard/stats
+- CRUD: /api/clients, /api/plans, /api/businesses, /api/campaigns, /api/keywords, /api/backlinks
+- POST /api/keywords/:id/refresh (mock rank update)
+- GET /api/reports/generate?clientId=&campaignId= (returns PDF or JSON)
+
+## Deliverables
+1. Full working code (backend + frontend) in a single zip or structured folders.
+2. README with setup instructions: install dependencies, seed database, run server, run frontend.
+3. Mock initial data (2 clients, 2 plans, 1 business, 3 campaigns, 6 keywords, 4 backlinks).
+4. No external SEO APIs needed – use mock/math.random for rank changes.
+
+## Important Notes
+- Keep it SIMPLE – no complex relationships, no real-time API sync, no white-label, no client portal.
+- Admin only – one user.
+- The Business (GMB) fields should be exactly as listed – don't add extra complexity.
+- Use SQLite to keep setup trivial (no separate database server needed).
+
+Now generate the complete application.

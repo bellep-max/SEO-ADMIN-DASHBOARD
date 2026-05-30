@@ -110,6 +110,7 @@ export const ListClientsResponse = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
   "websiteUrl": zod.string().nullish(),
   "assignedPlanId": zod.number().nullish(),
   "planName": zod.string().nullish(),
@@ -130,6 +131,7 @@ export const CreateClientBody = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "company": zod.string().optional(),
+  "phone": zod.string().optional(),
   "websiteUrl": zod.string().optional(),
   "assignedPlanId": zod.number().optional(),
   "status": zod.enum(['active', 'inactive']).optional()
@@ -148,6 +150,7 @@ export const GetClientResponse = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
   "websiteUrl": zod.string().nullish(),
   "assignedPlanId": zod.number().nullish(),
   "planName": zod.string().nullish(),
@@ -168,6 +171,7 @@ export const UpdateClientBody = zod.object({
   "name": zod.string().optional(),
   "email": zod.string().optional(),
   "company": zod.string().optional(),
+  "phone": zod.string().optional(),
   "websiteUrl": zod.string().optional(),
   "assignedPlanId": zod.number().nullish(),
   "status": zod.enum(['active', 'inactive']).optional()
@@ -178,6 +182,7 @@ export const UpdateClientResponse = zod.object({
   "name": zod.string(),
   "email": zod.string(),
   "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
   "websiteUrl": zod.string().nullish(),
   "assignedPlanId": zod.number().nullish(),
   "planName": zod.string().nullish(),
@@ -340,6 +345,128 @@ export const UpdatePlanResponse = zod.object({
  */
 export const DeletePlanParams = zod.object({
   "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary List all businesses
+ */
+export const ListBusinessesQueryParams = zod.object({
+  "clientId": zod.coerce.number().optional()
+})
+
+export const ListBusinessesResponseItem = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "businessName": zod.string(),
+  "address": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "category": zod.string().nullish(),
+  "hours": zod.string().nullish(),
+  "gmbUrl": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+export const ListBusinessesResponse = zod.array(ListBusinessesResponseItem)
+
+
+/**
+ * @summary Create a business profile
+ */
+export const CreateBusinessBody = zod.object({
+  "clientId": zod.number(),
+  "businessName": zod.string(),
+  "address": zod.string().optional(),
+  "phone": zod.string().optional(),
+  "website": zod.string().optional(),
+  "category": zod.string().optional(),
+  "hours": zod.string().optional(),
+  "gmbUrl": zod.string().optional()
+})
+
+
+/**
+ * @summary Get a business
+ */
+export const GetBusinessParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetBusinessResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "businessName": zod.string(),
+  "address": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "category": zod.string().nullish(),
+  "hours": zod.string().nullish(),
+  "gmbUrl": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Update a business
+ */
+export const UpdateBusinessParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateBusinessBody = zod.object({
+  "businessName": zod.string().optional(),
+  "address": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "category": zod.string().nullish(),
+  "hours": zod.string().nullish(),
+  "gmbUrl": zod.string().nullish()
+})
+
+export const UpdateBusinessResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "businessName": zod.string(),
+  "address": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "category": zod.string().nullish(),
+  "hours": zod.string().nullish(),
+  "gmbUrl": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+})
+
+
+/**
+ * @summary Delete a business
+ */
+export const DeleteBusinessParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+/**
+ * @summary Get the business profile for a client
+ */
+export const GetClientBusinessParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetClientBusinessResponse = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "businessName": zod.string(),
+  "address": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "website": zod.string().nullish(),
+  "category": zod.string().nullish(),
+  "hours": zod.string().nullish(),
+  "gmbUrl": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
 })
 
 

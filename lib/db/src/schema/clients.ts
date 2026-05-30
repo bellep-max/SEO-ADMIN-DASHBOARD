@@ -8,6 +8,7 @@ export const clientsTable = pgTable("clients", {
   name: text("name").notNull(),
   email: text("email").notNull(),
   company: text("company"),
+  phone: text("phone"),
   websiteUrl: text("website_url"),
   assignedPlanId: integer("assigned_plan_id").references(() => plansTable.id),
   status: text("status").notNull().default("active"),

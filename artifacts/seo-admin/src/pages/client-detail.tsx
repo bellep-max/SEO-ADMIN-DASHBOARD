@@ -6,10 +6,14 @@ import {
   useGetClientCampaigns,
   useGetClientKeywords,
   useGetClientBacklinks,
+  useGetClientBusiness,
+  useCreateBusiness,
+  useUpdateBusiness,
   useListPlans,
   useCreateCampaign,
   getGetClientQueryKey,
   getGetClientCampaignsQueryKey,
+  getGetClientBusinessQueryKey,
   ClientStatus,
   CampaignStatus,
 } from "@workspace/api-client-react";
@@ -24,7 +28,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ExternalLink, ArrowUp, ArrowDown, Minus, Plus } from "lucide-react";
+import { Loader2, ExternalLink, ArrowUp, ArrowDown, Minus, Plus, Building2, MapPin, Phone, Globe, Clock } from "lucide-react";
+
+const GMB_CATEGORIES = ["Plumber", "Electrician", "Café", "Restaurant", "Dentist", "Lawyer", "HVAC", "Landscaping", "Cleaning", "Auto Repair", "Gym", "Salon", "Flooring", "Roofing", "Other"];
 
 export default function ClientDetail() {
   const { id } = useParams();
@@ -35,11 +41,85 @@ export default function ClientDetail() {
   const { data: keywords } = useGetClientKeywords(clientId, { query: { enabled: !!clientId } });
   const { data: backlinks } = useGetClientBacklinks(clientId, { query: { enabled: !!clientId } });
   const { data: plans } = useListPlans();
+  const { data: business, isError: noBusinessYet } = useGetClientBusiness(clientId, {
+    query: { enabled: !!clientId, retry: false }
+  });
 
   const updateClient = useUpdateClient();
   const createCampaign = useCreateCampaign();
+  const createBusiness = useCreateBusiness();
+  const updateBusiness = useUpdateBusiness();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const [isBusinessEditing, setIsBusinessEditing] = useState(false);
+  const [businessForm, setBusinessForm] = useState({
+    businessName: "",
+    address: "",
+    phone: "",
+    website: "",
+    category: "",
+    hours: "",
+    gmbUrl: "",
+  });
+
+  function openBusinessForm() {
+    setBusinessForm({
+      businessName: business?.businessName || "",
+      address: business?.address || "",
+      phone: business?.phone || "",
+      website: business?.website || "",
+      category: business?.category || "",
+      hours: business?.hours || "",
+      gmbUrl: business?.gmbUrl || "",
+    });
+    setIsBusinessEditing(true);
+  }
+
+  function handleBusinessSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (business) {
+      updateBusiness.mutate({
+        id: business.id,
+        data: {
+          businessName: businessForm.businessName,
+          address: businessForm.address || null,
+          phone: businessForm.phone || null,
+          website: businessForm.website || null,
+          category: businessForm.category || null,
+          hours: businessForm.hours || null,
+          gmbUrl: businessForm.gmbUrl || null,
+        }
+      }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetClientBusinessQueryKey(clientId) });
+          setIsBusinessEditing(false);
+          toast({ title: "Business profile updated" });
+        },
+        onError: () => toast({ title: "Failed to update business", variant: "destructive" })
+      });
+    } else {
+      createBusiness.mutate({
+        data: {
+          clientId,
+          businessName: businessForm.businessName,
+          address: businessForm.address || undefined,
+          phone: businessForm.phone || undefined,
+          website: businessForm.website || undefined,
+          category: businessForm.category || undefined,
+          hours: businessForm.hours || undefined,
+          gmbUrl: businessForm.gmbUrl || undefined,
+        }
+      }, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetClientBusinessQueryKey(clientId) });
+          setIsBusinessEditing(false);
+          toast({ title: "Business profile created" });
+        },
+        onError: (err: any) => toast({ title: err?.message || "Failed to create business", variant: "destructive" })
+      });
+    }
+  }
 
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [campaignForm, setCampaignForm] = useState({
@@ -129,6 +209,10 @@ export default function ClientDetail() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="business">
+            <Building2 className="w-3.5 h-3.5 mr-1.5" />
+            Business {business ? "" : noBusinessYet ? "·" : ""}
+          </TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns ({campaigns?.length || 0})</TabsTrigger>
           <TabsTrigger value="keywords">Keywords ({keywords?.length || 0})</TabsTrigger>
           <TabsTrigger value="backlinks">Backlinks ({backlinks?.length || 0})</TabsTrigger>
@@ -160,6 +244,123 @@ export default function ClientDetail() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="business" className="mt-4">
+          {isBusinessEditing ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{business ? "Edit Business Profile" : "Add Business Profile"}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleBusinessSubmit} className="space-y-4 max-w-xl">
+                  <div className="space-y-2">
+                    <Label>Business Name <span className="text-destructive">*</span></Label>
+                    <Input required value={businessForm.businessName} onChange={e => setBusinessForm(p => ({ ...p, businessName: e.target.value }))} placeholder="Joe's Plumbing" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Category</Label>
+                    <Select value={businessForm.category} onValueChange={v => setBusinessForm(p => ({ ...p, category: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                      <SelectContent>
+                        {GMB_CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Address</Label>
+                    <Input value={businessForm.address} onChange={e => setBusinessForm(p => ({ ...p, address: e.target.value }))} placeholder="123 Main St, New York, NY 10001" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label>Phone</Label>
+                      <Input value={businessForm.phone} onChange={e => setBusinessForm(p => ({ ...p, phone: e.target.value }))} placeholder="+1 555-000-0000" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Website</Label>
+                      <Input value={businessForm.website} onChange={e => setBusinessForm(p => ({ ...p, website: e.target.value }))} placeholder="https://example.com" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Business Hours</Label>
+                    <Input value={businessForm.hours} onChange={e => setBusinessForm(p => ({ ...p, hours: e.target.value }))} placeholder="Mon-Fri 9am-5pm, Sat 10am-3pm" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Google Maps URL</Label>
+                    <Input value={businessForm.gmbUrl} onChange={e => setBusinessForm(p => ({ ...p, gmbUrl: e.target.value }))} placeholder="https://maps.app.goo.gl/..." />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" disabled={createBusiness.isPending || updateBusiness.isPending}>
+                      {(createBusiness.isPending || updateBusiness.isPending) && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      {business ? "Save Changes" : "Create Profile"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setIsBusinessEditing(false)}>Cancel</Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
+          ) : business ? (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-3">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  <CardTitle className="text-base">{business.businessName}</CardTitle>
+                  {business.category && <Badge variant="secondary">{business.category}</Badge>}
+                </div>
+                <Button variant="outline" size="sm" onClick={openBusinessForm}>Edit</Button>
+              </CardHeader>
+              <CardContent className="space-y-2 text-sm">
+                {business.address && (
+                  <div className="flex items-start gap-2 text-muted-foreground">
+                    <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary/60" />
+                    <span>{business.address}</span>
+                  </div>
+                )}
+                {business.phone && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="w-3.5 h-3.5 shrink-0 text-primary/60" />
+                    <a href={`tel:${business.phone}`} className="hover:text-foreground">{business.phone}</a>
+                  </div>
+                )}
+                {business.website && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Globe className="w-3.5 h-3.5 shrink-0 text-primary/60" />
+                    <a href={business.website} target="_blank" rel="noreferrer" className="text-primary hover:underline flex items-center gap-1">
+                      {business.website} <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </div>
+                )}
+                {business.hours && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Clock className="w-3.5 h-3.5 shrink-0 text-primary/60" />
+                    <span>{business.hours}</span>
+                  </div>
+                )}
+                {business.gmbUrl && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <ExternalLink className="w-3.5 h-3.5 shrink-0 text-primary/60" />
+                    <a href={business.gmbUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      View on Google Maps
+                    </a>
+                  </div>
+                )}
+                {!business.address && !business.phone && !business.website && !business.hours && !business.gmbUrl && (
+                  <p className="text-muted-foreground italic">No additional details provided.</p>
+                )}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-4">
+                <Building2 className="w-10 h-10 text-muted-foreground/40" />
+                <div>
+                  <p className="font-medium">No Business Profile Yet</p>
+                  <p className="text-sm text-muted-foreground mt-1">Add a GMB / Google Business profile for {client.name}</p>
+                </div>
+                <Button onClick={openBusinessForm}><Plus className="w-4 h-4 mr-2" /> Add Business Profile</Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="campaigns" className="mt-4 space-y-3">

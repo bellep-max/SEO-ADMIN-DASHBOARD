@@ -11,6 +11,7 @@ export interface ClientUpdate {
   name?: string;
   email?: string;
   company?: string;
+  phone?: string;
   websiteUrl?: string;
   /** @nullable */
   assignedPlanId?: number | null;

@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useLogout, useGetMe } from "@workspace/api-client-react";
 import {
   LayoutDashboard, Users, CreditCard, Target, Key, Link as LinkIcon,
-  Swords, FileBarChart, LogOut, Loader2, Moon, Sun, Zap, CheckCircle2, Signal
+  Swords, FileBarChart, LogOut, Loader2, Moon, Sun, Zap, CheckCircle2, Signal, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/context/ThemeContext";
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/plans", label: "Plans", icon: CreditCard },
+  { href: "/businesses", label: "Businesses", icon: Building2 },
   { href: "/campaigns", label: "Campaigns", icon: Target },
   { href: "/keywords", label: "Keywords", icon: Key },
   { href: "/verified-keywords", label: "Verified Keywords", icon: CheckCircle2 },

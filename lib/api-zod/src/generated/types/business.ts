@@ -5,23 +5,23 @@
  * SEO Local Admin Panel API
  * OpenAPI spec version: 0.1.0
  */
-import type { ClientStatus } from './clientStatus';
 
-export interface Client {
+export interface Business {
   id: number;
-  name: string;
-  email: string;
+  clientId: number;
+  businessName: string;
   /** @nullable */
-  company?: string | null;
+  address?: string | null;
   /** @nullable */
   phone?: string | null;
   /** @nullable */
-  websiteUrl?: string | null;
+  website?: string | null;
   /** @nullable */
-  assignedPlanId?: number | null;
+  category?: string | null;
   /** @nullable */
-  planName?: string | null;
-  status: ClientStatus;
+  hours?: string | null;
+  /** @nullable */
+  gmbUrl?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
