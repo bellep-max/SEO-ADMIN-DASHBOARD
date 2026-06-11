@@ -128,12 +128,11 @@ router.delete("/clients/:id", requireAuth, async (req, res): Promise<void> => {
   if (!existing) { res.status(404).json({ error: "Client not found" }); return; }
 
   const campaigns = await db.select({ id: campaignsTable.id }).from(campaignsTable).where(eq(campaignsTable.clientId, id));
-  const campaignIds = campaigns.map((c) => c.id);
-  for (const cid of campaignIds) {
-    await db.delete(backlinksTable).where(eq(backlinksTable.campaignId, cid));
-    await db.delete(keywordsTable).where(eq(keywordsTable.campaignId, cid));
+  for (const c of campaigns) {
+    await db.delete(keywordsTable).where(eq(keywordsTable.campaignId, c.id));
   }
   await db.delete(campaignsTable).where(eq(campaignsTable.clientId, id));
+  await db.delete(backlinksTable).where(eq(backlinksTable.clientId, id));
   await db.delete(businessesTable).where(eq(businessesTable.clientId, id));
   await db.delete(clientsTable).where(eq(clientsTable.id, id));
 
