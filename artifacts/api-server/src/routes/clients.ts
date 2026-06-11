@@ -1,6 +1,6 @@
 import { Router } from "express";
 import type { IRouter } from "express";
-import { db, clientsTable, campaignsTable, keywordsTable, backlinksTable, plansTable, activityLogTable } from "@workspace/db";
+import { db, clientsTable, campaignsTable, keywordsTable, backlinksTable, businessesTable, plansTable, activityLogTable } from "@workspace/db";
 import { eq, ilike, or, sql, count } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
@@ -123,8 +123,20 @@ router.delete("/clients/:id", requireAuth, async (req, res): Promise<void> => {
   const params = DeleteClientParams.safeParse(req.params);
   if (!params.success) { res.status(400).json({ error: "Invalid id" }); return; }
   const id = parseId(params.data.id);
-  const [client] = await db.delete(clientsTable).where(eq(clientsTable.id, id)).returning();
-  if (!client) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const [existing] = await db.select({ id: clientsTable.id }).from(clientsTable).where(eq(clientsTable.id, id));
+  if (!existing) { res.status(404).json({ error: "Client not found" }); return; }
+
+  const campaigns = await db.select({ id: campaignsTable.id }).from(campaignsTable).where(eq(campaignsTable.clientId, id));
+  const campaignIds = campaigns.map((c) => c.id);
+  for (const cid of campaignIds) {
+    await db.delete(backlinksTable).where(eq(backlinksTable.campaignId, cid));
+    await db.delete(keywordsTable).where(eq(keywordsTable.campaignId, cid));
+  }
+  await db.delete(campaignsTable).where(eq(campaignsTable.clientId, id));
+  await db.delete(businessesTable).where(eq(businessesTable.clientId, id));
+  await db.delete(clientsTable).where(eq(clientsTable.id, id));
+
   res.sendStatus(204);
 });
 
