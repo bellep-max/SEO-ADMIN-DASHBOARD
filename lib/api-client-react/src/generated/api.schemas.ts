@@ -238,6 +238,20 @@ export interface Campaign {
   targetLanguage?: string | null;
   status: CampaignStatus;
   keywordCount?: number;
+  /** @nullable */
+  searchAddress?: string | null;
+  /** @nullable */
+  planType?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  /** @nullable */
+  subscriptionId?: string | null;
+  /** @nullable */
+  cardLast4?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  nextBillingDate?: string | null;
   createdAt: string;
 }
 
@@ -253,10 +267,17 @@ export const CampaignInputStatus = {
 export interface CampaignInput {
   clientId: number;
   name: string;
-  targetDomain: string;
+  targetDomain?: string;
   targetLocation?: string;
   targetLanguage?: string;
   status?: CampaignInputStatus;
+  searchAddress?: string;
+  planType?: string;
+  createdBy?: string;
+  subscriptionId?: string;
+  cardLast4?: string;
+  startDate?: string;
+  nextBillingDate?: string;
 }
 
 export type CampaignUpdateStatus = typeof CampaignUpdateStatus[keyof typeof CampaignUpdateStatus];
@@ -276,6 +297,20 @@ export interface CampaignUpdate {
   /** @nullable */
   targetLanguage?: string | null;
   status?: CampaignUpdateStatus;
+  /** @nullable */
+  searchAddress?: string | null;
+  /** @nullable */
+  planType?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  /** @nullable */
+  subscriptionId?: string | null;
+  /** @nullable */
+  cardLast4?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  nextBillingDate?: string | null;
 }
 
 export interface Keyword {

@@ -7,10 +7,17 @@ export const campaignsTable = pgTable("campaigns", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id").notNull().references(() => clientsTable.id),
   name: text("name").notNull(),
-  targetDomain: text("target_domain").notNull(),
+  targetDomain: text("target_domain").notNull().default(""),
   targetLocation: text("target_location"),
   targetLanguage: text("target_language"),
   status: text("status").notNull().default("active"),
+  searchAddress: text("search_address"),
+  planType: text("plan_type"),
+  createdBy: text("created_by"),
+  subscriptionId: text("subscription_id"),
+  cardLast4: text("card_last4"),
+  startDate: text("start_date"),
+  nextBillingDate: text("next_billing_date"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

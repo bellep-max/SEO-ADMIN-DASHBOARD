@@ -21,8 +21,9 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Trash2, Building2 } from "lucide-react";
+import { Loader2, Plus, Search, Trash2, Building2, Megaphone } from "lucide-react";
 
 const SERVICE_CATEGORIES = [
   "Plumber", "Electrician", "Café", "Restaurant", "Dentist",
@@ -31,6 +32,8 @@ const SERVICE_CATEGORIES = [
 ];
 
 const CREATED_BY_ROLES = ["Admin", "Manager", "Sales Rep", "Agent", "Client"];
+
+const PLAN_TYPES = ["Basic", "Standard", "Premium", "Enterprise", "Custom"];
 
 function authFetch(url: string, opts?: RequestInit) {
   const token = localStorage.getItem("seo_admin_token") ?? "";
@@ -57,7 +60,24 @@ const EMPTY_BIZ = {
   createdBy: "",
 };
 
-type Step = "create-client" | "prompt" | "add-business" | "closed";
+const EMPTY_CAMPAIGN = {
+  name: "",
+  searchAddress: "",
+  planType: "",
+  createdBy: "",
+  subscriptionId: "",
+  cardLast4: "",
+  startDate: "",
+  nextBillingDate: "",
+};
+
+type Step =
+  | "closed"
+  | "create-client"
+  | "prompt-business"
+  | "add-business"
+  | "prompt-campaign"
+  | "add-campaign";
 
 export default function Clients() {
   const [search, setSearch] = useState("");
@@ -77,16 +97,30 @@ export default function Clients() {
     name: "", email: "", company: "", websiteUrl: "", assignedPlanId: "",
   });
   const [bizForm, setBizForm] = useState(EMPTY_BIZ);
+  const [campForm, setCampForm] = useState(EMPTY_CAMPAIGN);
 
   const createBusiness = useMutation({
     mutationFn: (data: typeof EMPTY_BIZ & { clientId: number }) =>
       authFetch("/api/businesses", { method: "POST", body: JSON.stringify(data) }),
-    onSuccess: () => {
-      setStep("closed");
-      setBizForm(EMPTY_BIZ);
-      toast({ title: "Business profile added successfully" });
+    onSuccess: (_, vars) => {
+      setCampForm((p) => ({
+        ...p,
+        name: [vars.businessName, vars.address].filter(Boolean).join(", "),
+        searchAddress: vars.address,
+      }));
+      setStep("prompt-campaign");
     },
     onError: () => toast({ title: "Failed to create business", variant: "destructive" }),
+  });
+
+  const createCampaign = useMutation({
+    mutationFn: (data: typeof EMPTY_CAMPAIGN & { clientId: number }) =>
+      authFetch("/api/campaigns", { method: "POST", body: JSON.stringify(data) }),
+    onSuccess: () => {
+      closeAll();
+      toast({ title: "Campaign created successfully" });
+    },
+    onError: () => toast({ title: "Failed to create campaign", variant: "destructive" }),
   });
 
   const handleClientSubmit = (e: React.FormEvent) => {
@@ -106,7 +140,7 @@ export default function Clients() {
           setNewClientId((created as { id: number }).id);
           setNewClientName(formData.name);
           setFormData({ name: "", email: "", company: "", websiteUrl: "", assignedPlanId: "" });
-          setStep("prompt");
+          setStep("prompt-business");
         },
       }
     );
@@ -116,6 +150,12 @@ export default function Clients() {
     e.preventDefault();
     if (!newClientId) return;
     createBusiness.mutate({ ...bizForm, clientId: newClientId });
+  };
+
+  const handleCampSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newClientId) return;
+    createCampaign.mutate({ ...campForm, clientId: newClientId });
   };
 
   const handleDelete = (id: number) => {
@@ -135,6 +175,7 @@ export default function Clients() {
   const closeAll = () => {
     setStep("closed");
     setBizForm(EMPTY_BIZ);
+    setCampForm(EMPTY_CAMPAIGN);
   };
 
   return (
@@ -151,7 +192,7 @@ export default function Clients() {
         </Button>
       </div>
 
-      {/* ── Search ── */}
+      {/* Search */}
       <div className="flex items-center space-x-2 max-w-sm">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -164,7 +205,7 @@ export default function Clients() {
         </div>
       </div>
 
-      {/* ── Table ── */}
+      {/* Table */}
       <div className="border rounded-md">
         <Table>
           <TableHeader>
@@ -283,17 +324,15 @@ export default function Clients() {
               </Select>
             </div>
             <Button type="submit" className="w-full" disabled={createClient.isPending}>
-              {createClient.isPending && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
+              {createClient.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Create Client
             </Button>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* ── Step 2: Prompt ── */}
-      <Dialog open={step === "prompt"} onOpenChange={(open) => !open && closeAll()}>
+      {/* ── Step 2: Prompt — Add Business? ── */}
+      <Dialog open={step === "prompt-business"} onOpenChange={(open) => !open && closeAll()}>
         <DialogContent aria-describedby={undefined} className="max-w-sm text-center">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-center gap-2">
@@ -306,10 +345,7 @@ export default function Clients() {
             <span className="font-semibold text-foreground">{newClientName}</span>?
           </p>
           <div className="flex gap-3 justify-center">
-            <Button
-              className="flex-1"
-              onClick={() => setStep("add-business")}
-            >
+            <Button className="flex-1" onClick={() => setStep("add-business")}>
               Yes, Add Business
             </Button>
             <Button
@@ -337,121 +373,244 @@ export default function Clients() {
           </DialogHeader>
           <form onSubmit={handleBizSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>
-                Business Name <span className="text-destructive">*</span>
-              </Label>
+              <Label>Business Name <span className="text-destructive">*</span></Label>
               <Input
                 required
                 value={bizForm.businessName}
-                onChange={(e) =>
-                  setBizForm((p) => ({ ...p, businessName: e.target.value }))
-                }
+                onChange={(e) => setBizForm((p) => ({ ...p, businessName: e.target.value }))}
                 placeholder="Joe's Plumbing"
               />
             </div>
-
             <div className="space-y-2">
               <Label>Service Category</Label>
               <Select
                 value={bizForm.category}
                 onValueChange={(v) => setBizForm((p) => ({ ...p, category: v }))}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>
                   {SERVICE_CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label>GMB URL</Label>
               <Input
                 value={bizForm.gmbUrl}
-                onChange={(e) =>
-                  setBizForm((p) => ({ ...p, gmbUrl: e.target.value }))
-                }
+                onChange={(e) => setBizForm((p) => ({ ...p, gmbUrl: e.target.value }))}
                 placeholder="https://maps.app.goo.gl/..."
               />
             </div>
-
             <div className="space-y-2">
               <Label>Website</Label>
               <Input
                 value={bizForm.website}
-                onChange={(e) =>
-                  setBizForm((p) => ({ ...p, website: e.target.value }))
-                }
+                onChange={(e) => setBizForm((p) => ({ ...p, website: e.target.value }))}
                 placeholder="https://example.com"
               />
             </div>
-
             <div className="space-y-2">
               <Label>Published (GMB) Address</Label>
               <Input
                 value={bizForm.address}
-                onChange={(e) =>
-                  setBizForm((p) => ({ ...p, address: e.target.value }))
-                }
-                placeholder="123 Main St, New York, NY"
+                onChange={(e) => setBizForm((p) => ({ ...p, address: e.target.value }))}
+                placeholder="123 Main St, Brooklyn, NY"
               />
             </div>
-
             <div className="space-y-2">
               <Label>Zip Code</Label>
               <Input
                 value={bizForm.zipCode}
-                onChange={(e) =>
-                  setBizForm((p) => ({ ...p, zipCode: e.target.value }))
-                }
+                onChange={(e) => setBizForm((p) => ({ ...p, zipCode: e.target.value }))}
                 placeholder="10001"
               />
             </div>
-
             <div className="space-y-2">
-              <Label>
-                Created By <span className="text-destructive">*</span>
-              </Label>
+              <Label>Created By <span className="text-destructive">*</span></Label>
               <Select
                 value={bizForm.createdBy}
                 onValueChange={(v) => setBizForm((p) => ({ ...p, createdBy: v }))}
-                required
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
                 <SelectContent>
                   {CREATED_BY_ROLES.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {r}
-                    </SelectItem>
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-
             <div className="flex gap-3 pt-1">
               <Button
                 type="submit"
                 className="flex-1"
                 disabled={createBusiness.isPending || !bizForm.createdBy}
               >
-                {createBusiness.isPending && (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
+                {createBusiness.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Save Business
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setStep("prompt-business")}>
+                Back
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Step 4: Prompt — Add Campaign? ── */}
+      <Dialog open={step === "prompt-campaign"} onOpenChange={(open) => !open && closeAll()}>
+        <DialogContent aria-describedby={undefined} className="max-w-sm text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2">
+              <Megaphone className="w-5 h-5 text-primary" />
+              Add Campaign?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mt-1 mb-4">
+            Business profile saved! Would you like to create a campaign for{" "}
+            <span className="font-semibold text-foreground">{bizForm.businessName}</span>?
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button className="flex-1" onClick={() => setStep("add-campaign")}>
+              Yes, Add Campaign
+            </Button>
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                toast({ title: "Business profile added successfully" });
+                closeAll();
+              }}
+            >
+              No, Skip
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Step 5: Add Campaign Form ── */}
+      <Dialog open={step === "add-campaign"} onOpenChange={(open) => !open && closeAll()}>
+        <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Megaphone className="w-4 h-4 text-primary" />
+              Add Campaign
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCampSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Campaign Name <span className="text-destructive">*</span></Label>
+              <Input
+                required
+                value={campForm.name}
+                onChange={(e) => setCampForm((p) => ({ ...p, name: e.target.value }))}
+                placeholder="Business Name, City"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Search Address</Label>
+              <Input
+                value={campForm.searchAddress}
+                onChange={(e) => setCampForm((p) => ({ ...p, searchAddress: e.target.value }))}
+                placeholder="123 Main St, Brooklyn, NY"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Plan Type <span className="text-destructive">*</span></Label>
+              <Select
+                value={campForm.planType}
+                onValueChange={(v) => setCampForm((p) => ({ ...p, planType: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Select plan type" /></SelectTrigger>
+                <SelectContent>
+                  {PLAN_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Created By <span className="text-destructive">*</span></Label>
+              <Select
+                value={campForm.createdBy}
+                onValueChange={(v) => setCampForm((p) => ({ ...p, createdBy: v }))}
+              >
+                <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                <SelectContent>
+                  {CREATED_BY_ROLES.map((r) => (
+                    <SelectItem key={r} value={r}>{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Separator />
+            <p className="text-sm font-medium text-muted-foreground">
+              Subscription{" "}
+              <span className="font-normal text-xs">(Manual entry — fill in if you have it)</span>
+            </p>
+
+            <div className="space-y-2">
+              <Label>Subscription ID</Label>
+              <Input
+                value={campForm.subscriptionId}
+                onChange={(e) => setCampForm((p) => ({ ...p, subscriptionId: e.target.value }))}
+                placeholder="sub_xxxxxxxxxxxx"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Card (last 4)</Label>
+              <Input
+                value={campForm.cardLast4}
+                onChange={(e) => setCampForm((p) => ({ ...p, cardLast4: e.target.value.slice(0, 4) }))}
+                placeholder="4242"
+                maxLength={4}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input
+                  type="date"
+                  value={campForm.startDate}
+                  onChange={(e) => setCampForm((p) => ({ ...p, startDate: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Next Billing Date</Label>
+                <Input
+                  type="date"
+                  value={campForm.nextBillingDate}
+                  onChange={(e) =>
+                    setCampForm((p) => ({ ...p, nextBillingDate: e.target.value }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-3 pt-1">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={
+                  createCampaign.isPending || !campForm.planType || !campForm.createdBy
+                }
+              >
+                {createCampaign.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Create
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setStep("prompt")}
+                onClick={closeAll}
               >
-                Back
+                Cancel
               </Button>
             </div>
           </form>

@@ -1402,12 +1402,26 @@ components:
           enum: [active, paused, completed]
         keywordCount:
           type: integer
+        searchAddress:
+          type: ["string", "null"]
+        planType:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        subscriptionId:
+          type: ["string", "null"]
+        cardLast4:
+          type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+        nextBillingDate:
+          type: ["string", "null"]
         createdAt:
           type: string
 
     CampaignInput:
       type: object
-      required: [clientId, name, targetDomain]
+      required: [clientId, name]
       properties:
         clientId:
           type: integer
@@ -1422,6 +1436,20 @@ components:
         status:
           type: string
           enum: [active, paused, completed]
+        searchAddress:
+          type: string
+        planType:
+          type: string
+        createdBy:
+          type: string
+        subscriptionId:
+          type: string
+        cardLast4:
+          type: string
+        startDate:
+          type: string
+        nextBillingDate:
+          type: string
 
     CampaignUpdate:
       type: object
@@ -1437,6 +1465,20 @@ components:
         status:
           type: string
           enum: [active, paused, completed]
+        searchAddress:
+          type: ["string", "null"]
+        planType:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
+        subscriptionId:
+          type: ["string", "null"]
+        cardLast4:
+          type: ["string", "null"]
+        startDate:
+          type: ["string", "null"]
+        nextBillingDate:
+          type: ["string", "null"]
 
     Keyword:
       type: object

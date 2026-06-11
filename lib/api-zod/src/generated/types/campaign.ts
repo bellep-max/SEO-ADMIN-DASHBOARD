@@ -20,5 +20,19 @@ export interface Campaign {
   targetLanguage?: string | null;
   status: CampaignStatus;
   keywordCount?: number;
+  /** @nullable */
+  searchAddress?: string | null;
+  /** @nullable */
+  planType?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  /** @nullable */
+  subscriptionId?: string | null;
+  /** @nullable */
+  cardLast4?: string | null;
+  /** @nullable */
+  startDate?: string | null;
+  /** @nullable */
+  nextBillingDate?: string | null;
   createdAt: string;
 }

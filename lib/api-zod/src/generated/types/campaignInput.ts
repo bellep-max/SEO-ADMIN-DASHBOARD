@@ -10,8 +10,15 @@ import type { CampaignInputStatus } from './campaignInputStatus';
 export interface CampaignInput {
   clientId: number;
   name: string;
-  targetDomain: string;
+  targetDomain?: string;
   targetLocation?: string;
   targetLanguage?: string;
   status?: CampaignInputStatus;
+  searchAddress?: string;
+  planType?: string;
+  createdBy?: string;
+  subscriptionId?: string;
+  cardLast4?: string;
+  startDate?: string;
+  nextBillingDate?: string;
 }
