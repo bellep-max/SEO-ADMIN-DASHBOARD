@@ -1260,6 +1260,10 @@ components:
           type: ["string", "null"]
         gmbUrl:
           type: ["string", "null"]
+        zipCode:
+          type: ["string", "null"]
+        createdBy:
+          type: ["string", "null"]
         createdAt:
           type: string
         updatedAt:
@@ -1285,6 +1289,10 @@ components:
           type: string
         gmbUrl:
           type: string
+        zipCode:
+          type: string
+        createdBy:
+          type: string
 
     BusinessUpdate:
       type: object
@@ -1302,6 +1310,10 @@ components:
         hours:
           type: ["string", "null"]
         gmbUrl:
+          type: ["string", "null"]
+        zipCode:
+          type: ["string", "null"]
+        createdBy:
           type: ["string", "null"]
 
     ClientsPage:

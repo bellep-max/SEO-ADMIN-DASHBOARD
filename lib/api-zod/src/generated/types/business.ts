@@ -22,6 +22,10 @@ export interface Business {
   hours?: string | null;
   /** @nullable */
   gmbUrl?: string | null;
+  /** @nullable */
+  zipCode?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
   createdAt: string;
   updatedAt?: string;
 }

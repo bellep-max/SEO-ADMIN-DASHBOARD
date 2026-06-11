@@ -1,0 +1,1 @@
+- [AppLayout auth redirect pattern](applayout-auth.md) — Never call setLocation/navigate during render; always use useEffect for redirects in AppLayout.

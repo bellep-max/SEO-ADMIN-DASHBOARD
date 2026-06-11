@@ -28,7 +28,7 @@ router.get("/businesses", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
-  const { clientId, businessName, address, phone, website, category, hours, gmbUrl } = req.body;
+  const { clientId, businessName, address, phone, website, category, hours, gmbUrl, zipCode, createdBy } = req.body;
   if (!clientId || !businessName) {
     res.status(400).json({ error: "clientId and businessName are required" });
     return;
@@ -47,6 +47,8 @@ router.post("/businesses", requireAuth, async (req, res): Promise<void> => {
     category: category || null,
     hours: hours || null,
     gmbUrl: gmbUrl || null,
+    zipCode: zipCode || null,
+    createdBy: createdBy || null,
   }).returning();
   res.status(201).json(formatBusiness(business));
 });
@@ -60,7 +62,7 @@ router.get("/businesses/:id", requireAuth, async (req, res): Promise<void> => {
 
 router.patch("/businesses/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseId(req.params.id);
-  const { businessName, address, phone, website, category, hours, gmbUrl } = req.body;
+  const { businessName, address, phone, website, category, hours, gmbUrl, zipCode, createdBy } = req.body;
   const updateData: Partial<typeof businessesTable.$inferInsert> = {};
   if (businessName !== undefined) updateData.businessName = businessName;
   if (address !== undefined) updateData.address = address;
@@ -69,6 +71,8 @@ router.patch("/businesses/:id", requireAuth, async (req, res): Promise<void> => 
   if (category !== undefined) updateData.category = category;
   if (hours !== undefined) updateData.hours = hours;
   if (gmbUrl !== undefined) updateData.gmbUrl = gmbUrl;
+  if (zipCode !== undefined) updateData.zipCode = zipCode;
+  if (createdBy !== undefined) updateData.createdBy = createdBy;
   const [business] = await db.update(businessesTable).set(updateData).where(eq(businessesTable.id, id)).returning();
   if (!business) { res.status(404).json({ error: "Business not found" }); return; }
   res.json(formatBusiness(business));

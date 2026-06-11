@@ -15,4 +15,6 @@ export interface BusinessInput {
   category?: string;
   hours?: string;
   gmbUrl?: string;
+  zipCode?: string;
+  createdBy?: string;
 }

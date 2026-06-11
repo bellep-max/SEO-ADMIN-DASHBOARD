@@ -365,6 +365,8 @@ export const ListBusinessesResponseItem = zod.object({
   "category": zod.string().nullish(),
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
+  "zipCode": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -382,7 +384,9 @@ export const CreateBusinessBody = zod.object({
   "website": zod.string().optional(),
   "category": zod.string().optional(),
   "hours": zod.string().optional(),
-  "gmbUrl": zod.string().optional()
+  "gmbUrl": zod.string().optional(),
+  "zipCode": zod.string().optional(),
+  "createdBy": zod.string().optional()
 })
 
 
@@ -403,6 +407,8 @@ export const GetBusinessResponse = zod.object({
   "category": zod.string().nullish(),
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
+  "zipCode": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -422,7 +428,9 @@ export const UpdateBusinessBody = zod.object({
   "website": zod.string().nullish(),
   "category": zod.string().nullish(),
   "hours": zod.string().nullish(),
-  "gmbUrl": zod.string().nullish()
+  "gmbUrl": zod.string().nullish(),
+  "zipCode": zod.string().nullish(),
+  "createdBy": zod.string().nullish()
 })
 
 export const UpdateBusinessResponse = zod.object({
@@ -435,6 +443,8 @@ export const UpdateBusinessResponse = zod.object({
   "category": zod.string().nullish(),
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
+  "zipCode": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -465,6 +475,8 @@ export const GetClientBusinessResponse = zod.object({
   "category": zod.string().nullish(),
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
+  "zipCode": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })

@@ -140,6 +140,10 @@ export interface Business {
   hours?: string | null;
   /** @nullable */
   gmbUrl?: string | null;
+  /** @nullable */
+  zipCode?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
   createdAt: string;
   updatedAt?: string;
 }
@@ -153,6 +157,8 @@ export interface BusinessInput {
   category?: string;
   hours?: string;
   gmbUrl?: string;
+  zipCode?: string;
+  createdBy?: string;
 }
 
 export interface BusinessUpdate {
@@ -169,6 +175,10 @@ export interface BusinessUpdate {
   hours?: string | null;
   /** @nullable */
   gmbUrl?: string | null;
+  /** @nullable */
+  zipCode?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
 }
 
 export interface ClientsPage {

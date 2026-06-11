@@ -13,6 +13,8 @@ export const businessesTable = pgTable("businesses", {
   category: text("category"),
   hours: text("hours"),
   gmbUrl: text("gmb_url"),
+  zipCode: text("zip_code"),
+  createdBy: text("created_by"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

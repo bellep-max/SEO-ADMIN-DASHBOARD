@@ -20,4 +20,8 @@ export interface BusinessUpdate {
   hours?: string | null;
   /** @nullable */
   gmbUrl?: string | null;
+  /** @nullable */
+  zipCode?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
 }
