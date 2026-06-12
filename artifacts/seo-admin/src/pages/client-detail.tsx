@@ -11,8 +11,6 @@ import {
   useCreateCampaign,
   getGetClientQueryKey,
   getGetClientCampaignsQueryKey,
-  ClientStatus,
-  CampaignStatus,
 } from "@workspace/api-client-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -168,7 +166,7 @@ export default function ClientDetail() {
   const updateBusiness = useMutation<BusinessProfile, Error, { id: number; form: BusinessForm }>({
     mutationFn: ({ id: bizId, form }) =>
       authFetch(`/api/businesses/${bizId}`, {
-        method: "PUT",
+        method: "PATCH",
         body: JSON.stringify(form),
       }),
     onSuccess: () => {
@@ -188,7 +186,7 @@ export default function ClientDetail() {
     targetDomain: "",
     targetLocation: "US",
     targetLanguage: "en",
-    status: "active" as CampaignStatus,
+    status: "active" as const,
   });
 
   function openBusinessForm() {
@@ -215,7 +213,7 @@ export default function ClientDetail() {
 
   const handleStatusToggle = () => {
     if (!client) return;
-    const newStatus: ClientStatus = client.status === "active" ? "inactive" : "active";
+    const newStatus = client.status === "active" ? "inactive" : "active";
     updateClient.mutate(
       { id: clientId, data: { status: newStatus } },
       {
@@ -683,7 +681,7 @@ export default function ClientDetail() {
                       onValueChange={(v) =>
                         setCampaignForm((p) => ({
                           ...p,
-                          status: v as CampaignStatus,
+                          status: v as "active" | "paused" | "completed",
                         }))
                       }
                     >
