@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListBacklinks, useGetDisavowList, useDeleteBacklink, getListBacklinksQueryKey, useListClients } from "@workspace/api-client-react";
+import { useListBacklinks, useGetDisavowList, useDeleteBacklink, getListBacklinksQueryKey, useListClients, getGetDisavowListQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,8 @@ export default function Backlinks() {
   const { toast } = useToast();
   
   const deleteBacklink = useDeleteBacklink();
-  const { refetch: fetchDisavow } = useGetDisavowList({ clientId: clientId || 0 }, { query: { enabled: false } });
+  const disavowParams = { clientId: clientId || 0 };
+  const { refetch: fetchDisavow } = useGetDisavowList(disavowParams, { query: { enabled: false, queryKey: getGetDisavowListQueryKey(disavowParams) } });
 
   const handleDelete = (id: number) => {
     if (confirm("Are you sure?")) {

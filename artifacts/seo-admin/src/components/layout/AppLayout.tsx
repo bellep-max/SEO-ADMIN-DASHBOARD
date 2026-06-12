@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useLogout, useGetMe } from "@workspace/api-client-react";
+import { useLogout, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useEffect } from "react";
 import {
   LayoutDashboard, Users, CreditCard, Target, Key, Link as LinkIcon,
@@ -23,7 +23,9 @@ const navItems = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { data: user, isLoading } = useGetMe({ query: { retry: false } });
+  const { data: user, isLoading } = useGetMe({
+    query: { retry: false, queryKey: getGetMeQueryKey(), staleTime: 5 * 60 * 1000 },
+  });
   const logout = useLogout();
   const { theme, toggle } = useTheme();
 

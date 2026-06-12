@@ -11,7 +11,11 @@ import {
   useCreateCampaign,
   getGetClientQueryKey,
   getGetClientCampaignsQueryKey,
+  getGetClientKeywordsQueryKey,
+  getGetClientBacklinksQueryKey,
+  getListPlansQueryKey,
 } from "@workspace/api-client-react";
+import type { Client, Campaign, Keyword, Backlink, Plan } from "@workspace/api-client-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -111,28 +115,30 @@ const EMPTY_BIZ_FORM: BusinessForm = {
 };
 
 export default function ClientDetail() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const { id } = params;
   const clientId = id ? parseInt(id, 10) : 0;
+  console.log("[ClientDetail] mounted — params:", params, "clientId:", clientId);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const { data: client, isLoading } = useGetClient(clientId, {
-    query: { enabled: clientId > 0 },
-  } as Parameters<typeof useGetClient>[1]);
+  const { data: client, isLoading } = useGetClient<Client>(clientId, {
+    query: { enabled: clientId > 0, queryKey: getGetClientQueryKey(clientId) },
+  });
 
-  const { data: campaigns } = useGetClientCampaigns(clientId, {
-    query: { enabled: clientId > 0 },
-  } as Parameters<typeof useGetClientCampaigns>[1]);
+  const { data: campaigns } = useGetClientCampaigns<Campaign[]>(clientId, {
+    query: { enabled: clientId > 0, queryKey: getGetClientCampaignsQueryKey(clientId) },
+  });
 
-  const { data: keywords } = useGetClientKeywords(clientId, {
-    query: { enabled: clientId > 0 },
-  } as Parameters<typeof useGetClientKeywords>[1]);
+  const { data: keywords } = useGetClientKeywords<Keyword[]>(clientId, {
+    query: { enabled: clientId > 0, queryKey: getGetClientKeywordsQueryKey(clientId) },
+  });
 
-  const { data: backlinks } = useGetClientBacklinks(clientId, {
-    query: { enabled: clientId > 0 },
-  } as Parameters<typeof useGetClientBacklinks>[1]);
+  const { data: backlinks } = useGetClientBacklinks<Backlink[]>(clientId, {
+    query: { enabled: clientId > 0, queryKey: getGetClientBacklinksQueryKey(clientId) },
+  });
 
-  const { data: plans } = useListPlans();
+  const { data: plans } = useListPlans<Plan[]>({ query: { queryKey: getListPlansQueryKey() } });
 
   const bizKey = [`/api/clients/${clientId}/business`];
   const { data: business, isError: noBusinessYet } = useQuery<BusinessProfile | null>({
@@ -181,12 +187,18 @@ export default function ClientDetail() {
   const [businessForm, setBusinessForm] = useState<BusinessForm>(EMPTY_BIZ_FORM);
 
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
-  const [campaignForm, setCampaignForm] = useState({
+  const [campaignForm, setCampaignForm] = useState<{
+    name: string;
+    targetDomain: string;
+    targetLocation: string;
+    targetLanguage: string;
+    status: "active" | "paused" | "completed";
+  }>({
     name: "",
     targetDomain: "",
     targetLocation: "US",
     targetLanguage: "en",
-    status: "active" as const,
+    status: "active",
   });
 
   function openBusinessForm() {

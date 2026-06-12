@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/context/ThemeContext";
 import NotFound from "@/pages/not-found";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
@@ -23,6 +24,7 @@ const queryClient = new QueryClient();
 
 function ProtectedRoutes() {
   return (
+    <ErrorBoundary>
     <AppLayout>
       <Switch>
         <Route path="/dashboard" component={Dashboard} />
@@ -40,6 +42,7 @@ function ProtectedRoutes() {
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
+    </ErrorBoundary>
   );
 }
 

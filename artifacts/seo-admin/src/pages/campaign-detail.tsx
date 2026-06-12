@@ -7,6 +7,7 @@ import {
   useCreateKeyword,
   getGetCampaignQueryKey,
   getGetCampaignKeywordsQueryKey,
+  getGetKeywordHistoryQueryKey,
   getListKeywordsQueryKey,
   CampaignStatus,
   useUpdateCampaign,
@@ -25,7 +26,7 @@ import { Loader2, ArrowUp, ArrowDown, Minus, Plus } from "lucide-react";
 import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts";
 
 function KeywordSparkline({ keywordId }: { keywordId: number }) {
-  const { data: history } = useGetKeywordHistory(keywordId, { query: { enabled: !!keywordId } });
+  const { data: history } = useGetKeywordHistory(keywordId, { query: { enabled: !!keywordId, queryKey: getGetKeywordHistoryQueryKey(keywordId) } });
   if (!history || history.length === 0) return <div className="text-xs text-muted-foreground">—</div>;
   const validData = history.filter(h => h.rank !== null).map(h => ({ ...h, rank: h.rank as number })).reverse();
   return (
@@ -44,8 +45,8 @@ export default function CampaignDetail() {
   const { id } = useParams();
   const campaignId = id ? parseInt(id) : 0;
 
-  const { data: campaign, isLoading } = useGetCampaign(campaignId, { query: { enabled: !!campaignId } });
-  const { data: keywords } = useGetCampaignKeywords(campaignId, { query: { enabled: !!campaignId } });
+  const { data: campaign, isLoading } = useGetCampaign(campaignId, { query: { enabled: !!campaignId, queryKey: getGetCampaignQueryKey(campaignId) } });
+  const { data: keywords } = useGetCampaignKeywords(campaignId, { query: { enabled: !!campaignId, queryKey: getGetCampaignKeywordsQueryKey(campaignId) } });
 
   const updateCampaign = useUpdateCampaign();
   const createKeyword = useCreateKeyword();
