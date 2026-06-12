@@ -118,7 +118,6 @@ export default function ClientDetail() {
   const params = useParams<{ id: string }>();
   const { id } = params;
   const clientId = id ? parseInt(id, 10) : 0;
-  console.log("[ClientDetail] mounted — params:", params, "clientId:", clientId);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
