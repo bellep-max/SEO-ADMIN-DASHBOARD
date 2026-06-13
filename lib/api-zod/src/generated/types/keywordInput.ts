@@ -5,10 +5,14 @@
  * SEO Local Admin Panel API
  * OpenAPI spec version: 0.1.0
  */
+import type { KeywordInputKeywordType } from './keywordInputKeywordType';
 
 export interface KeywordInput {
   campaignId: number;
   keywordText: string;
+  keywordType?: KeywordInputKeywordType;
+  isPrimary?: boolean;
+  isActive?: boolean;
   currentRank?: number;
   previousRank?: number;
   searchVolume?: number;

@@ -313,6 +313,14 @@ export interface CampaignUpdate {
   nextBillingDate?: string | null;
 }
 
+export type KeywordKeywordType = typeof KeywordKeywordType[keyof typeof KeywordKeywordType];
+
+
+export const KeywordKeywordType = {
+  keywords: 'keywords',
+  keywords_with_backlinks: 'keywords_with_backlinks',
+} as const;
+
 export interface Keyword {
   id: number;
   campaignId: number;
@@ -321,6 +329,9 @@ export interface Keyword {
   /** @nullable */
   clientName?: string | null;
   keywordText: string;
+  keywordType: KeywordKeywordType;
+  isPrimary: boolean;
+  isActive: boolean;
   /** @nullable */
   currentRank?: number | null;
   /** @nullable */
@@ -335,16 +346,38 @@ export interface Keyword {
   lastUpdated: string;
 }
 
+export type KeywordInputKeywordType = typeof KeywordInputKeywordType[keyof typeof KeywordInputKeywordType];
+
+
+export const KeywordInputKeywordType = {
+  keywords: 'keywords',
+  keywords_with_backlinks: 'keywords_with_backlinks',
+} as const;
+
 export interface KeywordInput {
   campaignId: number;
   keywordText: string;
+  keywordType?: KeywordInputKeywordType;
+  isPrimary?: boolean;
+  isActive?: boolean;
   currentRank?: number;
   previousRank?: number;
   searchVolume?: number;
 }
 
+export type KeywordUpdateKeywordType = typeof KeywordUpdateKeywordType[keyof typeof KeywordUpdateKeywordType];
+
+
+export const KeywordUpdateKeywordType = {
+  keywords: 'keywords',
+  keywords_with_backlinks: 'keywords_with_backlinks',
+} as const;
+
 export interface KeywordUpdate {
   keywordText?: string;
+  keywordType?: KeywordUpdateKeywordType;
+  isPrimary?: boolean;
+  isActive?: boolean;
   /** @nullable */
   currentRank?: number | null;
   /** @nullable */
@@ -377,6 +410,10 @@ export interface Backlink {
   clientId: number;
   /** @nullable */
   clientName?: string | null;
+  /** @nullable */
+  keywordId?: number | null;
+  /** @nullable */
+  linkTypeLabel?: string | null;
   sourceUrl: string;
   targetUrl: string;
   /** @nullable */
@@ -400,6 +437,8 @@ export const BacklinkInputStatus = {
 
 export interface BacklinkInput {
   clientId: number;
+  keywordId?: number;
+  linkTypeLabel?: string;
   sourceUrl: string;
   targetUrl: string;
   anchorText?: string;

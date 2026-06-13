@@ -9,6 +9,8 @@ import type { BacklinkInputStatus } from './backlinkInputStatus';
 
 export interface BacklinkInput {
   clientId: number;
+  keywordId?: number;
+  linkTypeLabel?: string;
   sourceUrl: string;
   targetUrl: string;
   anchorText?: string;

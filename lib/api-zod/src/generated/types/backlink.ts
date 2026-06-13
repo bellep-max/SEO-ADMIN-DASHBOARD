@@ -12,6 +12,10 @@ export interface Backlink {
   clientId: number;
   /** @nullable */
   clientName?: string | null;
+  /** @nullable */
+  keywordId?: number | null;
+  /** @nullable */
+  linkTypeLabel?: string | null;
   sourceUrl: string;
   targetUrl: string;
   /** @nullable */

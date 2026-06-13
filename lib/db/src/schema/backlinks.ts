@@ -2,10 +2,13 @@ import { pgTable, text, serial, timestamp, integer, boolean } from "drizzle-orm/
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { clientsTable } from "./clients";
+import { keywordsTable } from "./keywords";
 
 export const backlinksTable = pgTable("backlinks", {
   id: serial("id").primaryKey(),
   clientId: integer("client_id").notNull().references(() => clientsTable.id),
+  keywordId: integer("keyword_id").references(() => keywordsTable.id),
+  linkTypeLabel: text("link_type_label"),
   sourceUrl: text("source_url").notNull(),
   targetUrl: text("target_url").notNull(),
   anchorText: text("anchor_text"),

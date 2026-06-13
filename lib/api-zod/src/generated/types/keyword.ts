@@ -5,6 +5,7 @@
  * SEO Local Admin Panel API
  * OpenAPI spec version: 0.1.0
  */
+import type { KeywordKeywordType } from './keywordKeywordType';
 
 export interface Keyword {
   id: number;
@@ -14,6 +15,9 @@ export interface Keyword {
   /** @nullable */
   clientName?: string | null;
   keywordText: string;
+  keywordType: KeywordKeywordType;
+  isPrimary: boolean;
+  isActive: boolean;
   /** @nullable */
   currentRank?: number | null;
   /** @nullable */

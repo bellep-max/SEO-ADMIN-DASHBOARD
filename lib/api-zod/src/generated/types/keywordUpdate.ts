@@ -5,9 +5,13 @@
  * SEO Local Admin Panel API
  * OpenAPI spec version: 0.1.0
  */
+import type { KeywordUpdateKeywordType } from './keywordUpdateKeywordType';
 
 export interface KeywordUpdate {
   keywordText?: string;
+  keywordType?: KeywordUpdateKeywordType;
+  isPrimary?: boolean;
+  isActive?: boolean;
   /** @nullable */
   currentRank?: number | null;
   /** @nullable */

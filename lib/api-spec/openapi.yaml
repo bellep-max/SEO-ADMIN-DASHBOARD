@@ -1482,7 +1482,7 @@ components:
 
     Keyword:
       type: object
-      required: [id, campaignId, keywordText, lastUpdated, isVerified]
+      required: [id, campaignId, keywordText, lastUpdated, isVerified, keywordType, isPrimary, isActive]
       properties:
         id:
           type: integer
@@ -1494,6 +1494,13 @@ components:
           type: ["string", "null"]
         keywordText:
           type: string
+        keywordType:
+          type: string
+          enum: [keywords, keywords_with_backlinks]
+        isPrimary:
+          type: boolean
+        isActive:
+          type: boolean
         currentRank:
           type: ["integer", "null"]
         previousRank:
@@ -1517,6 +1524,13 @@ components:
           type: integer
         keywordText:
           type: string
+        keywordType:
+          type: string
+          enum: [keywords, keywords_with_backlinks]
+        isPrimary:
+          type: boolean
+        isActive:
+          type: boolean
         currentRank:
           type: integer
         previousRank:
@@ -1529,6 +1543,13 @@ components:
       properties:
         keywordText:
           type: string
+        keywordType:
+          type: string
+          enum: [keywords, keywords_with_backlinks]
+        isPrimary:
+          type: boolean
+        isActive:
+          type: boolean
         currentRank:
           type: ["integer", "null"]
         previousRank:
@@ -1566,6 +1587,10 @@ components:
           type: integer
         clientName:
           type: ["string", "null"]
+        keywordId:
+          type: ["integer", "null"]
+        linkTypeLabel:
+          type: ["string", "null"]
         sourceUrl:
           type: string
         targetUrl:
@@ -1590,6 +1615,10 @@ components:
       properties:
         clientId:
           type: integer
+        keywordId:
+          type: integer
+        linkTypeLabel:
+          type: string
         sourceUrl:
           type: string
         targetUrl:
