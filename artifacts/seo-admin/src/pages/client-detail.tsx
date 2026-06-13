@@ -9,6 +9,8 @@ import {
   useGetClientBacklinks,
   useListPlans,
   useCreateCampaign,
+  useDeleteKeyword,
+  useRefreshKeywordRank,
   getGetClientQueryKey,
   getGetClientCampaignsQueryKey,
   getGetClientKeywordsQueryKey,
@@ -16,6 +18,7 @@ import {
   getListPlansQueryKey,
 } from "@workspace/api-client-react";
 import type { Client, Campaign, Keyword, Backlink, Plan } from "@workspace/api-client-react";
+import { AddKeywordDialog } from "@/components/add-keyword-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,6 +60,9 @@ import {
   Phone,
   Globe,
   Clock,
+  Trash2,
+  RefreshCw,
+  Link2,
 } from "lucide-react";
 
 const GMB_CATEGORIES = [
@@ -182,10 +188,14 @@ export default function ClientDetail() {
     onError: () => toast({ title: "Failed to update business", variant: "destructive" }),
   });
 
+  const deleteKeyword = useDeleteKeyword();
+  const refreshRank = useRefreshKeywordRank();
+
   const [isBusinessEditing, setIsBusinessEditing] = useState(false);
   const [businessForm, setBusinessForm] = useState<BusinessForm>(EMPTY_BIZ_FORM);
 
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
+  const [isAddKeywordOpen, setIsAddKeywordOpen] = useState(false);
   const [campaignForm, setCampaignForm] = useState<{
     name: string;
     targetDomain: string;
@@ -766,33 +776,56 @@ export default function ClientDetail() {
         </TabsContent>
 
         {/* ── Keywords ── */}
-        <TabsContent value="keywords" className="mt-4">
+        <TabsContent value="keywords" className="mt-4 space-y-3">
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setIsAddKeywordOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" /> Add Keyword
+            </Button>
+          </div>
           <Card>
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Keyword</TableHead>
                   <TableHead>Campaign</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead className="text-right">Rank</TableHead>
                   <TableHead className="text-right">Change</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {!keywords?.length ? (
                   <TableRow>
-                    <TableCell
-                      colSpan={4}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      No keywords yet.
+                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      No keywords yet. Click Add Keyword to get started.
                     </TableCell>
                   </TableRow>
                 ) : (
                   keywords.map((k) => (
                     <TableRow key={k.id}>
-                      <TableCell className="font-medium">{k.keywordText}</TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {k.keywordText}
+                          {k.isPrimary && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 bg-amber-500/10 text-amber-600 border-amber-500/20">1st</Badge>
+                          )}
+                          {!k.isActive && (
+                            <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 text-muted-foreground">inactive</Badge>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
                         {k.campaignName}
+                      </TableCell>
+                      <TableCell>
+                        {k.keywordType === "keywords_with_backlinks" ? (
+                          <Badge variant="outline" className="text-[10px] gap-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                            <Link2 className="w-3 h-3" /> +Backlink
+                          </Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Keyword</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right font-semibold">
                         {k.currentRank ?? "—"}
@@ -800,29 +833,50 @@ export default function ClientDetail() {
                       <TableCell className="text-right">
                         {k.rankChange != null ? (
                           k.rankChange > 0 ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-green-500/10 text-green-600 border-green-500/20"
-                            >
-                              <ArrowUp className="w-3 h-3 mr-1" />
-                              {k.rankChange}
+                            <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                              <ArrowUp className="w-3 h-3 mr-1" />{k.rankChange}
                             </Badge>
                           ) : k.rankChange < 0 ? (
-                            <Badge
-                              variant="outline"
-                              className="bg-destructive/10 text-destructive border-destructive/20"
-                            >
-                              <ArrowDown className="w-3 h-3 mr-1" />
-                              {Math.abs(k.rankChange)}
+                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">
+                              <ArrowDown className="w-3 h-3 mr-1" />{Math.abs(k.rankChange)}
                             </Badge>
                           ) : (
-                            <span className="text-muted-foreground">
-                              <Minus className="w-3 h-3 inline" />
-                            </span>
+                            <span className="text-muted-foreground"><Minus className="w-3 h-3 inline" /></span>
                           )
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
+                      </TableCell>
+                      <TableCell className="text-right space-x-1">
+                        <Button
+                          variant="ghost" size="icon"
+                          disabled={refreshRank.isPending}
+                          onClick={() => refreshRank.mutate({ id: k.id }, {
+                            onSuccess: () => {
+                              queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) });
+                              toast({ title: "Rank refreshed" });
+                            },
+                          })}
+                          title="Refresh rank"
+                        >
+                          <RefreshCw className={`w-4 h-4 text-muted-foreground hover:text-primary ${refreshRank.isPending ? "animate-spin" : ""}`} />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            if (confirm("Delete this keyword?")) {
+                              deleteKeyword.mutate({ id: k.id }, {
+                                onSuccess: () => {
+                                  queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) });
+                                  toast({ title: "Keyword deleted" });
+                                },
+                              });
+                            }
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
@@ -830,6 +884,13 @@ export default function ClientDetail() {
               </TableBody>
             </Table>
           </Card>
+
+          <AddKeywordDialog
+            open={isAddKeywordOpen}
+            onClose={() => setIsAddKeywordOpen(false)}
+            campaigns={campaigns ?? []}
+            onCreated={() => queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) })}
+          />
         </TabsContent>
 
         {/* ── Backlinks ── */}
