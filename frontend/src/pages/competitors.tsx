@@ -65,7 +65,7 @@ export default function Competitors() {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Add Competitor</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Track Competitor</DialogTitle>
             </DialogHeader>

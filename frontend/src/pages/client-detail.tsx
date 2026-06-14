@@ -247,18 +247,16 @@ export default function ClientDetail() {
 
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [isAddKeywordOpen, setIsAddKeywordOpen] = useState(false);
-  const [campaignForm, setCampaignForm] = useState<{
-    name: string;
-    targetDomain: string;
-    targetLocation: string;
-    targetLanguage: string;
-    status: "active" | "paused" | "completed";
-  }>({
-    name: "",
-    targetDomain: "",
-    targetLocation: "US",
-    targetLanguage: "en",
-    status: "active",
+  const [campaignForm, setCampaignForm] = useState({
+    name: client?.name ?? "",
+    searchAddress: "",
+    planId: "",
+    businessId: "none",
+    createdBy: "",
+    subscriptionId: "",
+    cardLast4: "",
+    startDate: "",
+    nextBillingDate: "",
   });
 
   const handleStatusToggle = () => {
@@ -327,7 +325,7 @@ export default function ClientDetail() {
           accountUserName: editClientForm.accountUserName || null,
           accountUser: editClientForm.accountUser || null,
           contactBillingEmail: editClientForm.contactBillingEmail || null,
-          assignedPlanId: editClientForm.assignedPlanId ? parseInt(editClientForm.assignedPlanId) : null,
+          assignedPlanId: editClientForm.assignedPlanId && editClientForm.assignedPlanId !== "none" ? parseInt(editClientForm.assignedPlanId) : null,
           createdBy: editClientForm.createdBy || null,
         } as any,
       },
@@ -342,15 +340,42 @@ export default function ClientDetail() {
     );
   }
 
+  const defaultCampaignName = client?.name ?? "";
+
+  const EMPTY_CAMPAIGN_FORM = {
+    name: defaultCampaignName,
+    searchAddress: "",
+    planId: "",
+    businessId: "none",
+    createdBy: "",
+    subscriptionId: "",
+    cardLast4: "",
+    startDate: "",
+    nextBillingDate: "",
+  };
+
   const handleCreateCampaign = (e: React.FormEvent) => {
     e.preventDefault();
     createCampaign.mutate(
-      { data: { ...campaignForm, clientId } },
+      {
+        data: {
+          clientId,
+          name: campaignForm.name,
+          searchAddress: campaignForm.searchAddress || undefined,
+          planId: campaignForm.planId ? parseInt(campaignForm.planId) : undefined,
+          businessId: campaignForm.businessId && campaignForm.businessId !== "none" ? parseInt(campaignForm.businessId) : undefined,
+          createdBy: campaignForm.createdBy || undefined,
+          subscriptionId: campaignForm.subscriptionId || undefined,
+          cardLast4: campaignForm.cardLast4 || undefined,
+          startDate: campaignForm.startDate || undefined,
+          nextBillingDate: campaignForm.nextBillingDate || undefined,
+        },
+      },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetClientCampaignsQueryKey(clientId) });
           setIsCampaignDialogOpen(false);
-          setCampaignForm({ name: "", targetDomain: "", targetLocation: "US", targetLanguage: "en", status: "active" });
+          setCampaignForm({ ...EMPTY_CAMPAIGN_FORM, name: defaultCampaignName });
           toast({ title: "Campaign created", description: `"${campaignForm.name}" is now active.` });
         },
         onError: () => toast({ title: "Failed to create campaign", variant: "destructive" }),
@@ -522,7 +547,7 @@ export default function ClientDetail() {
 
           {/* ── Edit Client Dialog ── */}
           <Dialog open={editClientOpen} onOpenChange={setEditClientOpen}>
-            <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Edit Client</DialogTitle>
               </DialogHeader>
@@ -602,7 +627,7 @@ export default function ClientDetail() {
                       onValueChange={(v) => setEditClientForm((p) => ({ ...p, assignedPlanId: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No Plan</SelectItem>
+                        <SelectItem value="none">No Plan</SelectItem>
                         {plans?.map((p) => (
                           <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                         ))}
@@ -738,7 +763,7 @@ export default function ClientDetail() {
 
           {/* Add / Edit dialog */}
           <Dialog open={bizDialog !== null} onOpenChange={(open) => { if (!open) setBizDialog(null); }}>
-            <DialogContent aria-describedby={undefined} className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{isEditMode ? "Edit Business Profile" : "Add Business Profile"}</DialogTitle>
               </DialogHeader>
@@ -830,94 +855,156 @@ export default function ClientDetail() {
                   <Plus className="w-4 h-4 mr-2" /> Add Campaign
                 </Button>
               </DialogTrigger>
-              <DialogContent aria-describedby={undefined}>
+              <DialogContent aria-describedby={undefined} className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>New Campaign for {client.name}</DialogTitle>
+                  <DialogTitle>Add Campaign</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleCreateCampaign} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Campaign Name</Label>
+                <form onSubmit={handleCreateCampaign} className="space-y-4 pt-1">
+
+                  {/* Campaign Name — auto-filled from selected business, not editable */}
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      Campaign Name <span className="text-destructive">*</span>
+                    </Label>
                     <Input
-                      required
+                      disabled
                       value={campaignForm.name}
-                      onChange={(e) =>
-                        setCampaignForm((p) => ({ ...p, name: e.target.value }))
-                      }
-                      placeholder="Q3 Growth Campaign"
+                      className="opacity-100 cursor-not-allowed bg-muted"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Target Domain</Label>
-                    <Input
-                      required
-                      value={campaignForm.targetDomain}
-                      onChange={(e) =>
-                        setCampaignForm((p) => ({
-                          ...p,
-                          targetDomain: e.target.value,
-                        }))
-                      }
-                      placeholder="example.com"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
-                      <Label>Location</Label>
-                      <Input
-                        value={campaignForm.targetLocation}
-                        onChange={(e) =>
-                          setCampaignForm((p) => ({
-                            ...p,
-                            targetLocation: e.target.value,
-                          }))
-                        }
-                        placeholder="US"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Language</Label>
-                      <Input
-                        value={campaignForm.targetLanguage}
-                        onChange={(e) =>
-                          setCampaignForm((p) => ({
-                            ...p,
-                            targetLanguage: e.target.value,
-                          }))
-                        }
-                        placeholder="en"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status</Label>
+
+                  {/* Business */}
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Business</Label>
                     <Select
-                      value={campaignForm.status}
-                      onValueChange={(v) =>
+                      value={campaignForm.businessId}
+                      onValueChange={(v) => {
+                        const biz = businesses.find((b) => b.id.toString() === v);
                         setCampaignForm((p) => ({
                           ...p,
-                          status: v as "active" | "paused" | "completed",
-                        }))
-                      }
+                          businessId: v,
+                          name: biz ? biz.businessName : defaultCampaignName,
+                        }));
+                      }}
                     >
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select business..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="active">Active</SelectItem>
-                        <SelectItem value="paused">Paused</SelectItem>
+                        <SelectItem value="none">No specific business</SelectItem>
+                        {businesses.map((b) => (
+                          <SelectItem key={b.id} value={b.id.toString()}>{b.businessName}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={createCampaign.isPending}
-                  >
-                    {createCampaign.isPending && (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    )}
-                    Create Campaign
-                  </Button>
+
+                  {/* Search Address */}
+                  <div className="space-y-1">
+                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Search Address</Label>
+                    <Input
+                      value={campaignForm.searchAddress}
+                      onChange={(e) => setCampaignForm((p) => ({ ...p, searchAddress: e.target.value }))}
+                      placeholder="123 Main St, Austin, TX"
+                    />
+                  </div>
+
+                  {/* Plan Type + Created By */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        Plan Type <span className="text-destructive">*</span>
+                      </Label>
+                      <Select
+                        value={campaignForm.planId}
+                        onValueChange={(v) => setCampaignForm((p) => ({ ...p, planId: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select plan type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {plans?.map((p) => (
+                            <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                        Created By <span className="text-destructive">*</span>
+                      </Label>
+                      <Select
+                        value={campaignForm.createdBy}
+                        onValueChange={(v) => setCampaignForm((p) => ({ ...p, createdBy: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CREATED_BY_ROLES.map((r) => (
+                            <SelectItem key={r} value={r}>{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Subscription section */}
+                  <div className="space-y-3 pt-1">
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Subscription</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Manual entry — fill in if you have it.</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Subscription ID</Label>
+                        <Input
+                          value={campaignForm.subscriptionId}
+                          onChange={(e) => setCampaignForm((p) => ({ ...p, subscriptionId: e.target.value }))}
+                          placeholder="sub_xxxxxxxxxxxx"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Card (Last 4)</Label>
+                        <Input
+                          value={campaignForm.cardLast4}
+                          onChange={(e) => setCampaignForm((p) => ({ ...p, cardLast4: e.target.value }))}
+                          placeholder="4242"
+                          maxLength={4}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Start Date</Label>
+                        <Input
+                          type="date"
+                          value={campaignForm.startDate}
+                          onChange={(e) => setCampaignForm((p) => ({ ...p, startDate: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Next Billing Date</Label>
+                        <Input
+                          type="date"
+                          value={campaignForm.nextBillingDate}
+                          onChange={(e) => setCampaignForm((p) => ({ ...p, nextBillingDate: e.target.value }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-1">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setIsCampaignDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" className="flex-1" disabled={createCampaign.isPending}>
+                      {createCampaign.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                      Create Campaign
+                    </Button>
+                  </div>
+
                 </form>
               </DialogContent>
             </Dialog>
