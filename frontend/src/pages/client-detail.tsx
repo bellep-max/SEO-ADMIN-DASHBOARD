@@ -248,10 +248,10 @@ export default function ClientDetail() {
   const [isCampaignDialogOpen, setIsCampaignDialogOpen] = useState(false);
   const [isAddKeywordOpen, setIsAddKeywordOpen] = useState(false);
   const [campaignForm, setCampaignForm] = useState({
-    name: "",
+    name: client?.name ?? "",
     searchAddress: "",
     planId: "",
-    businessId: "",
+    businessId: "none",
     createdBy: "",
     subscriptionId: "",
     cardLast4: "",
@@ -863,11 +863,13 @@ export default function ClientDetail() {
 
                   {/* Campaign Name — auto-filled from selected business, not editable */}
                   <div className="space-y-1">
-                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Campaign Name</Label>
+                    <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+                      Campaign Name <span className="text-destructive">*</span>
+                    </Label>
                     <Input
-                      readOnly
+                      disabled
                       value={campaignForm.name}
-                      className="bg-muted text-muted-foreground cursor-not-allowed"
+                      className="opacity-100 cursor-not-allowed bg-muted"
                     />
                   </div>
 
