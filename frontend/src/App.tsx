@@ -11,7 +11,6 @@ import Dashboard from "@/pages/dashboard";
 import Clients from "@/pages/clients";
 import ClientDetail from "@/pages/client-detail";
 import Plans from "@/pages/plans";
-import Campaigns from "@/pages/campaigns";
 import CampaignDetail from "@/pages/campaign-detail";
 import Keywords from "@/pages/keywords";
 import VerifiedKeywords from "@/pages/verified-keywords";
@@ -48,7 +47,6 @@ function AppRoutes() {
           <Route path="/clients" component={Clients} />
           <Route path="/clients/:id" component={ClientDetail} />
           <Route path="/plans" component={Plans} />
-          <Route path="/campaigns" component={Campaigns} />
           <Route path="/campaigns/:id" component={CampaignDetail} />
           <Route path="/keywords" component={Keywords} />
           <Route path="/verified-keywords" component={VerifiedKeywords} />

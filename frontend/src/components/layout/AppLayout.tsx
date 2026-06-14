@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { useLogout, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useEffect } from "react";
 import {
-  LayoutDashboard, Users, CreditCard, Target, Key,
+  LayoutDashboard, Users, CreditCard, Key,
   FileBarChart, LogOut, Loader2, Moon, Sun, Zap, CheckCircle2, Signal
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/clients", label: "Clients", icon: Users },
   { href: "/plans", label: "Plans", icon: CreditCard },
-  { href: "/campaigns", label: "Campaigns", icon: Target },
   { href: "/keywords", label: "Keywords", icon: Key },
   { href: "/verified-keywords", label: "Verified Keywords", icon: CheckCircle2 },
   { href: "/falcon", label: "Falcon", icon: Zap },
