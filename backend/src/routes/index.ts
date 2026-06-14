@@ -10,6 +10,7 @@ import keywordsRouter from "./keywords";
 import backlinksRouter from "./backlinks";
 import competitorsRouter from "./competitors";
 import reportsRouter from "./reports";
+import geoGridsRouter from "./geo-grids";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(keywordsRouter);
 router.use(backlinksRouter);
 router.use(competitorsRouter);
 router.use(reportsRouter);
+router.use(geoGridsRouter);
 
 export default router;

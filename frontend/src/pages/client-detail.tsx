@@ -19,6 +19,7 @@ import {
 } from "@workspace/api-client-react";
 import type { Client, Campaign, Keyword, Backlink, Plan } from "@workspace/api-client-react";
 import { AddKeywordDialog } from "@/components/add-keyword-dialog";
+import { GeoGridHeatmap } from "@/components/geo-grid-heatmap";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -501,6 +502,9 @@ export default function ClientDetail() {
           </TabsTrigger>
           <TabsTrigger value="backlinks">
             Backlinks ({backlinks?.length ?? 0})
+          </TabsTrigger>
+          <TabsTrigger value="heatmap">
+            Heatmap
           </TabsTrigger>
         </TabsList>
 
@@ -1246,6 +1250,16 @@ export default function ClientDetail() {
               </TableBody>
             </Table>
           </Card>
+        </TabsContent>
+
+        {/* ── Heatmap ── */}
+        <TabsContent value="heatmap" className="mt-4">
+          <GeoGridHeatmap
+            clientId={clientId}
+            clientName={client.name}
+            campaigns={campaigns ?? []}
+            businesses={businesses}
+          />
         </TabsContent>
       </Tabs>
 
