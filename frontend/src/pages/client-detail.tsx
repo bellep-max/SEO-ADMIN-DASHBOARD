@@ -224,6 +224,7 @@ export default function ClientDetail() {
 
   const deleteKeyword = useDeleteKeyword();
   const refreshRank = useRefreshKeywordRank();
+  const [refreshingKwId, setRefreshingKwId] = useState<number | null>(null);
 
   const [bizDialog, setBizDialog] = useState<{ mode: "add" | "edit"; biz?: BusinessProfile } | null>(null);
   const [bizForm, setBizForm] = useState<BusinessForm>(EMPTY_BIZ_FORM);
@@ -1160,16 +1161,21 @@ export default function ClientDetail() {
                       <TableCell className="text-right space-x-1">
                         <Button
                           variant="ghost" size="icon"
-                          disabled={refreshRank.isPending}
-                          onClick={() => refreshRank.mutate({ id: k.id }, {
-                            onSuccess: () => {
-                              queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) });
-                              toast({ title: "Rank refreshed" });
-                            },
-                          })}
+                          disabled={refreshingKwId === k.id}
+                          onClick={() => {
+                            setRefreshingKwId(k.id);
+                            refreshRank.mutate({ id: k.id }, {
+                              onSuccess: () => {
+                                queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) });
+                                toast({ title: "Rank refreshed" });
+                                setRefreshingKwId(null);
+                              },
+                              onError: () => setRefreshingKwId(null),
+                            });
+                          }}
                           title="Refresh rank"
                         >
-                          <RefreshCw className={`w-4 h-4 text-muted-foreground hover:text-primary ${refreshRank.isPending ? "animate-spin" : ""}`} />
+                          <RefreshCw className={`w-4 h-4 text-muted-foreground hover:text-primary ${refreshingKwId === k.id ? "animate-spin" : ""}`} />
                         </Button>
                         <Button
                           variant="ghost" size="icon"

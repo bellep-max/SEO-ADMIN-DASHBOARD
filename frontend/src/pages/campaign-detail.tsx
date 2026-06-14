@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ArrowUp, ArrowDown, Minus, Plus } from "lucide-react";
+import { Loader2, ArrowUp, ArrowDown, Minus, Plus, ArrowLeft } from "lucide-react";
 import { Line, LineChart, ResponsiveContainer, YAxis } from "recharts";
 
 function KeywordSparkline({ keywordId }: { keywordId: number }) {
@@ -72,6 +72,10 @@ export default function CampaignDetail() {
 
   const handleAddKeyword = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!keywordForm.keywordText.trim()) {
+      toast({ title: "Keyword is required", variant: "destructive" });
+      return;
+    }
     createKeyword.mutate({
       data: {
         campaignId,
@@ -101,6 +105,10 @@ export default function CampaignDetail() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      <Link href={`/clients/${campaign.clientId}`} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors w-fit">
+        <ArrowLeft className="w-4 h-4" />
+        {campaign.clientName || "Client"}
+      </Link>
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-3">

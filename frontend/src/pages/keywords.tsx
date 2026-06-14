@@ -138,6 +138,7 @@ export default function Keywords() {
   const deleteKeyword = useDeleteKeyword();
   const refreshRank = useRefreshKeywordRank();
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+  const [refreshingId, setRefreshingId] = useState<number | null>(null);
 
   const displayData = tab === "verified" ? data?.filter(k => k.isVerified) : data;
 
@@ -148,15 +149,6 @@ export default function Keywords() {
         queryClient.invalidateQueries({ queryKey: getListKeywordsQueryKey() });
         toast({ title: "Keyword deleted" });
         setDeleteTarget(null);
-      }
-    });
-  };
-
-  const handleRefresh = (id: number) => {
-    refreshRank.mutate({ id }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListKeywordsQueryKey() });
-        toast({ title: "Rank refreshed" });
       }
     });
   };
@@ -286,8 +278,23 @@ export default function Keywords() {
                         </div>
                       </TableCell>
                       <TableCell className="text-right space-x-1">
-                        <Button variant="ghost" size="icon" onClick={() => handleRefresh(keyword.id)} disabled={refreshRank.isPending} title="Refresh Rank">
-                          <RefreshCw className={`w-4 h-4 text-muted-foreground hover:text-primary ${refreshRank.isPending ? "animate-spin" : ""}`} />
+                        <Button
+                          variant="ghost" size="icon"
+                          onClick={() => {
+                            setRefreshingId(keyword.id);
+                            refreshRank.mutate({ id: keyword.id }, {
+                              onSuccess: () => {
+                                queryClient.invalidateQueries({ queryKey: getListKeywordsQueryKey() });
+                                toast({ title: "Rank refreshed" });
+                                setRefreshingId(null);
+                              },
+                              onError: () => setRefreshingId(null),
+                            });
+                          }}
+                          disabled={refreshingId === keyword.id}
+                          title="Refresh Rank"
+                        >
+                          <RefreshCw className={`w-4 h-4 text-muted-foreground hover:text-primary ${refreshingId === keyword.id ? "animate-spin" : ""}`} />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(keyword.id)} className="text-muted-foreground hover:text-destructive">
                           <Trash2 className="w-4 h-4" />
