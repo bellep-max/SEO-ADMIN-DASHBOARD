@@ -46,7 +46,7 @@ const SERVICE_CATEGORIES = [
 ];
 const CREATED_BY_ROLES = ["Admin", "Manager", "Sales Rep", "Agent", "Client"];
 const PLAN_TYPES = ["Basic", "Standard", "Premium", "Enterprise", "Custom"];
-const ACCOUNT_TYPES = ["Local SEO", "National SEO", "E-commerce", "Lead Gen", "Reputation", "Other"];
+const ACCOUNT_TYPES = ["Agency", "Retail", "Personal Business Account"];
 
 function authFetch(url: string, opts?: RequestInit) {
   const token = localStorage.getItem("seo_admin_token") ?? "";
@@ -157,6 +157,7 @@ export default function Clients() {
     if (!formData.email.trim()) errs.email = "Email is required";
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
       errs.email = "Enter a valid email address";
+    if (!formData.createdBy) errs.createdBy = "Please select a role";
     return errs;
   }
 
@@ -445,79 +446,112 @@ export default function Clients() {
         <Dialog open={step === "create-client"} onOpenChange={(open) => !open && closeAll()}>
           <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>New Client</DialogTitle>
+              <DialogTitle>Add New Client</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleClientSubmit} noValidate className="space-y-4">
-              <div className="space-y-1">
-                <Label>
-                  Name <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  value={formData.name}
-                  onChange={(e) => {
-                    setFormData((p) => ({ ...p, name: e.target.value }));
-                    if (formErrors.name) setFormErrors((p) => ({ ...p, name: undefined }));
-                  }}
-                  className={formErrors.name ? "border-destructive" : ""}
-                />
-                <FieldError msg={formErrors.name} />
-              </div>
+            <form onSubmit={handleClientSubmit} noValidate className="space-y-5">
 
-              <div className="space-y-1">
-                <Label>
-                  Email <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => {
-                    setFormData((p) => ({ ...p, email: e.target.value }));
-                    if (formErrors.email) setFormErrors((p) => ({ ...p, email: undefined }));
-                  }}
-                  className={formErrors.email ? "border-destructive" : ""}
-                />
-                <FieldError msg={formErrors.email} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+              {/* CLIENT INFORMATION */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Client Information</p>
                 <div className="space-y-1">
-                  <Label>Company</Label>
+                  <Label>Client Name <span className="text-destructive">*</span></Label>
                   <Input
-                    value={formData.company}
-                    onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))}
+                    placeholder="Acme Plumbers"
+                    value={formData.name}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, name: e.target.value }));
+                      if (formErrors.name) setFormErrors((p) => ({ ...p, name: undefined }));
+                    }}
+                    className={formErrors.name ? "border-destructive" : ""}
+                  />
+                  <FieldError msg={formErrors.name} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Email <span className="text-destructive">*</span></Label>
+                  <Input
+                    type="email"
+                    placeholder="client@example.com"
+                    value={formData.email}
+                    onChange={(e) => {
+                      setFormData((p) => ({ ...p, email: e.target.value }));
+                      if (formErrors.email) setFormErrors((p) => ({ ...p, email: undefined }));
+                    }}
+                    className={formErrors.email ? "border-destructive" : ""}
+                  />
+                  <FieldError msg={formErrors.email} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Company</Label>
+                    <Input
+                      value={formData.company}
+                      onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))}
+                      placeholder="Acme Inc."
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Phone</Label>
+                    <Input
+                      value={formData.phone}
+                      onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                      placeholder="+1 555-000-0000"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Website URL</Label>
+                  <Input
+                    type="url"
+                    value={formData.websiteUrl}
+                    onChange={(e) => setFormData((p) => ({ ...p, websiteUrl: e.target.value }))}
+                    placeholder="https://example.com"
+                  />
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* ACCOUNT INFORMATION */}
+              <div className="space-y-3">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Account Information</p>
+                <div className="space-y-1">
+                  <Label>Account Type</Label>
+                  <Select
+                    value={formData.accountType}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, accountType: v }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select account type..." /></SelectTrigger>
+                    <SelectContent>
+                      {ACCOUNT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Account User Name</Label>
+                  <Input
+                    value={formData.accountUserName}
+                    onChange={(e) => setFormData((p) => ({ ...p, accountUserName: e.target.value }))}
+                    placeholder="John Doe"
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label>Phone</Label>
+                  <Label>Account Email</Label>
                   <Input
-                    value={formData.phone}
-                    onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
-                    placeholder="+1 555-000-0000"
+                    type="email"
+                    value={formData.accountUser}
+                    onChange={(e) => setFormData((p) => ({ ...p, accountUser: e.target.value }))}
+                    placeholder="john@example.com"
                   />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label>Website URL</Label>
-                <Input
-                  type="url"
-                  value={formData.websiteUrl}
-                  onChange={(e) => setFormData((p) => ({ ...p, websiteUrl: e.target.value }))}
-                  placeholder="https://example.com"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <Label>Billing Email</Label>
-                <Input
-                  type="email"
-                  value={formData.contactBillingEmail}
-                  onChange={(e) => setFormData((p) => ({ ...p, contactBillingEmail: e.target.value }))}
-                  placeholder="billing@client.com"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Contact / Billing Email</Label>
+                  <Input
+                    type="email"
+                    value={formData.contactBillingEmail}
+                    onChange={(e) => setFormData((p) => ({ ...p, contactBillingEmail: e.target.value }))}
+                    placeholder="billing@example.com"
+                  />
+                </div>
                 <div className="space-y-1">
                   <Label>Plan</Label>
                   <Select
@@ -533,63 +567,20 @@ export default function Clients() {
                   </Select>
                 </div>
                 <div className="space-y-1">
-                  <Label>Status</Label>
+                  <Label>Created By <span className="text-destructive">*</span></Label>
                   <Select
-                    value={formData.status}
-                    onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}
+                    value={formData.createdBy}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, createdBy: v }))}
                   >
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className={formErrors.createdBy ? "border-destructive" : ""}>
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
+                      {CREATED_BY_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <FieldError msg={formErrors.createdBy} />
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label>Account Type</Label>
-                <Select
-                  value={formData.accountType}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, accountType: v }))}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label>Account User ID</Label>
-                  <Input
-                    value={formData.accountUser}
-                    onChange={(e) => setFormData((p) => ({ ...p, accountUser: e.target.value }))}
-                    placeholder="user@agency.com"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label>Account User Name</Label>
-                  <Input
-                    value={formData.accountUserName}
-                    onChange={(e) => setFormData((p) => ({ ...p, accountUserName: e.target.value }))}
-                    placeholder="Jane Doe"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label>Created By</Label>
-                <Select
-                  value={formData.createdBy}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, createdBy: v }))}
-                >
-                  <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
-                  <SelectContent>
-                    {CREATED_BY_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
               </div>
 
               <Button type="submit" className="w-full" disabled={createClient.isPending}>
