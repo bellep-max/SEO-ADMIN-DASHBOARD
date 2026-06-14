@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Plus, Building2, MapPin, Phone, Globe, ExternalLink, Pencil, Trash2, Clock } from "lucide-react";
 
 const CATEGORIES = ["Plumber", "Electrician", "Café", "Restaurant", "Dentist", "Lawyer", "HVAC", "Landscaping", "Cleaning", "Auto Repair", "Gym", "Salon", "Flooring", "Roofing", "Other"];
@@ -31,6 +32,8 @@ type BusinessFormState = {
   category: string;
   hours: string;
   gmbUrl: string;
+  isSab: boolean;
+  serviceArea: string;
 };
 
 const emptyForm: BusinessFormState = {
@@ -42,6 +45,8 @@ const emptyForm: BusinessFormState = {
   category: "",
   hours: "",
   gmbUrl: "",
+  isSab: false,
+  serviceArea: "",
 };
 
 export default function Businesses() {
@@ -80,6 +85,8 @@ export default function Businesses() {
       category: b.category || "",
       hours: b.hours || "",
       gmbUrl: b.gmbUrl || "",
+      isSab: b.isSab ?? false,
+      serviceArea: b.serviceArea || "",
     });
   }
 
@@ -90,12 +97,14 @@ export default function Businesses() {
       data: {
         clientId: parseInt(form.clientId),
         businessName: form.businessName,
-        address: form.address || undefined,
+        address: form.isSab ? undefined : (form.address || undefined),
         phone: form.phone || undefined,
         website: form.website || undefined,
         category: form.category || undefined,
         hours: form.hours || undefined,
         gmbUrl: form.gmbUrl || undefined,
+        isSab: form.isSab,
+        serviceArea: form.isSab ? (form.serviceArea || undefined) : undefined,
       }
     }, {
       onSuccess: () => {
@@ -117,12 +126,14 @@ export default function Businesses() {
       id: editBusiness.id,
       data: {
         businessName: form.businessName,
-        address: form.address || null,
+        address: form.isSab ? null : (form.address || null),
         phone: form.phone || null,
         website: form.website || null,
         category: form.category || null,
         hours: form.hours || null,
         gmbUrl: form.gmbUrl || null,
+        isSab: form.isSab,
+        serviceArea: form.isSab ? (form.serviceArea || null) : null,
       }
     }, {
       onSuccess: () => {
@@ -182,10 +193,29 @@ export default function Businesses() {
           </SelectContent>
         </Select>
       </div>
-      <div className="space-y-2">
-        <Label>Address</Label>
-        <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} placeholder="123 Main St, New York, NY 10001" />
+      <div className="flex items-center gap-3 py-1">
+        <Checkbox
+          id="isSab"
+          checked={form.isSab}
+          onCheckedChange={v => setForm(p => ({ ...p, isSab: !!v }))}
+        />
+        <div>
+          <Label htmlFor="isSab" className="cursor-pointer font-medium">Service Area Business (SAB)</Label>
+          <p className="text-xs text-muted-foreground">Business serves customers at their location — physical address is hidden on Google</p>
+        </div>
       </div>
+
+      {form.isSab ? (
+        <div className="space-y-2">
+          <Label>Service Area</Label>
+          <Input value={form.serviceArea} onChange={e => setForm(p => ({ ...p, serviceArea: e.target.value }))} placeholder="e.g. New York City and surrounding 30 miles" />
+        </div>
+      ) : (
+        <div className="space-y-2">
+          <Label>Address</Label>
+          <Input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} placeholder="123 Main St, New York, NY 10001" />
+        </div>
+      )}
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label>Phone</Label>
@@ -264,6 +294,7 @@ export default function Businesses() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-base truncate">{b.businessName}</h3>
                         {b.category && <Badge variant="secondary" className="text-xs shrink-0">{b.category}</Badge>}
+                        {b.isSab && <Badge variant="outline" className="text-xs shrink-0 border-blue-500/30 text-blue-600 bg-blue-500/10">SAB</Badge>}
                       </div>
                       {client && (
                         <Link href={`/clients/${b.clientId}`} className="text-xs text-primary hover:underline mt-0.5 block">
@@ -282,7 +313,13 @@ export default function Businesses() {
                   </div>
 
                   <div className="space-y-1.5 text-sm text-muted-foreground">
-                    {b.address && (
+                    {b.isSab && b.serviceArea && (
+                      <div className="flex items-start gap-2">
+                        <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-500/70" />
+                        <span className="text-blue-600/80">{b.serviceArea}</span>
+                      </div>
+                    )}
+                    {!b.isSab && b.address && (
                       <div className="flex items-start gap-2">
                         <MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary/60" />
                         <span>{b.address}</span>
