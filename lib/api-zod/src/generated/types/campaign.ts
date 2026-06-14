@@ -13,7 +13,8 @@ export interface Campaign {
   /** @nullable */
   clientName?: string | null;
   name: string;
-  targetDomain: string;
+  /** @nullable */
+  targetDomain?: string | null;
   /** @nullable */
   targetLocation?: string | null;
   /** @nullable */
@@ -23,7 +24,11 @@ export interface Campaign {
   /** @nullable */
   searchAddress?: string | null;
   /** @nullable */
-  planType?: string | null;
+  planId?: number | null;
+  /** @nullable */
+  planName?: string | null;
+  /** @nullable */
+  businessId?: number | null;
   /** @nullable */
   createdBy?: string | null;
   /** @nullable */

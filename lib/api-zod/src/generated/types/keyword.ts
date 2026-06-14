@@ -30,4 +30,6 @@ export interface Keyword {
   /** @nullable */
   verifiedAt?: string | null;
   lastUpdated: string;
+  /** @nullable */
+  searchLocation?: string | null;
 }

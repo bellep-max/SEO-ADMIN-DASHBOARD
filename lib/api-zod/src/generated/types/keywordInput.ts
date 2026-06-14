@@ -16,4 +16,5 @@ export interface KeywordInput {
   currentRank?: number;
   previousRank?: number;
   searchVolume?: number;
+  searchLocation?: string;
 }

@@ -50,10 +50,11 @@ export const GetMeResponse = zod.object({
 export const GetDashboardStatsResponse = zod.object({
   "totalClients": zod.number(),
   "activeClients": zod.number().optional(),
+  "inactiveClients": zod.number().optional(),
   "activeCampaigns": zod.number(),
   "totalKeywords": zod.number(),
-  "newBacklinks30d": zod.number(),
-  "totalRevenue": zod.number().optional()
+  "newBacklinks30d": zod.number().optional(),
+  "totalRevenue": zod.number().optional(),
 })
 
 
@@ -70,29 +71,6 @@ export const GetDashboardActivityResponseItem = zod.object({
 export const GetDashboardActivityResponse = zod.array(GetDashboardActivityResponseItem)
 
 
-/**
- * @summary Get monthly revenue chart data
- */
-export const GetDashboardRevenueResponseItem = zod.object({
-  "month": zod.string(),
-  "revenue": zod.number()
-})
-export const GetDashboardRevenueResponse = zod.array(GetDashboardRevenueResponseItem)
-
-
-/**
- * @summary Get keywords with significant rank drops
- */
-export const GetKeywordAlertsResponseItem = zod.object({
-  "keywordId": zod.number(),
-  "keywordText": zod.string(),
-  "campaignName": zod.string(),
-  "clientName": zod.string(),
-  "previousRank": zod.number().nullable(),
-  "currentRank": zod.number().nullable(),
-  "drop": zod.number()
-})
-export const GetKeywordAlertsResponse = zod.array(GetKeywordAlertsResponseItem)
 
 
 /**
@@ -101,7 +79,11 @@ export const GetKeywordAlertsResponse = zod.array(GetKeywordAlertsResponseItem)
 export const ListClientsQueryParams = zod.object({
   "search": zod.coerce.string().optional(),
   "page": zod.coerce.number().optional(),
-  "limit": zod.coerce.number().optional()
+  "limit": zod.coerce.number().optional(),
+  "type": zod.coerce.string().optional(),
+  "status": zod.coerce.string().optional(),
+  "plan": zod.coerce.string().optional(),
+  "location": zod.coerce.string().optional()
 })
 
 export const ListClientsResponse = zod.object({
@@ -115,6 +97,13 @@ export const ListClientsResponse = zod.object({
   "assignedPlanId": zod.number().nullish(),
   "planName": zod.string().nullish(),
   "status": zod.enum(['active', 'inactive']),
+  "accountType": zod.string().nullish(),
+  "accountUser": zod.string().nullish(),
+  "accountUserName": zod.string().nullish(),
+  "contactBillingEmail": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "businessCount": zod.number().optional(),
+  "campaignCount": zod.number().optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })),
@@ -134,7 +123,12 @@ export const CreateClientBody = zod.object({
   "phone": zod.string().optional(),
   "websiteUrl": zod.string().optional(),
   "assignedPlanId": zod.number().optional(),
-  "status": zod.enum(['active', 'inactive']).optional()
+  "status": zod.enum(['active', 'inactive']).optional(),
+  "accountType": zod.string().optional(),
+  "accountUser": zod.string().optional(),
+  "accountUserName": zod.string().optional(),
+  "contactBillingEmail": zod.string().optional(),
+  "createdBy": zod.string().optional()
 })
 
 
@@ -155,6 +149,13 @@ export const GetClientResponse = zod.object({
   "assignedPlanId": zod.number().nullish(),
   "planName": zod.string().nullish(),
   "status": zod.enum(['active', 'inactive']),
+  "accountType": zod.string().nullish(),
+  "accountUser": zod.string().nullish(),
+  "accountUserName": zod.string().nullish(),
+  "contactBillingEmail": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "businessCount": zod.number().optional(),
+  "campaignCount": zod.number().optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -174,7 +175,12 @@ export const UpdateClientBody = zod.object({
   "phone": zod.string().optional(),
   "websiteUrl": zod.string().optional(),
   "assignedPlanId": zod.number().nullish(),
-  "status": zod.enum(['active', 'inactive']).optional()
+  "status": zod.enum(['active', 'inactive']).optional(),
+  "accountType": zod.string().nullish(),
+  "accountUser": zod.string().nullish(),
+  "accountUserName": zod.string().nullish(),
+  "contactBillingEmail": zod.string().nullish(),
+  "createdBy": zod.string().nullish()
 })
 
 export const UpdateClientResponse = zod.object({
@@ -187,6 +193,12 @@ export const UpdateClientResponse = zod.object({
   "assignedPlanId": zod.number().nullish(),
   "planName": zod.string().nullish(),
   "status": zod.enum(['active', 'inactive']),
+  "accountType": zod.string().nullish(),
+  "accountUser": zod.string().nullish(),
+  "accountUserName": zod.string().nullish(),
+  "contactBillingEmail": zod.string().nullish(),
+  "createdBy": zod.string().nullish(),
+  "businessCount": zod.number().optional(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
@@ -212,18 +224,20 @@ export const GetClientCampaignsResponseItem = zod.object({
   "clientId": zod.number(),
   "clientName": zod.string().nullish(),
   "name": zod.string(),
-  "targetDomain": zod.string(),
+  "targetDomain": zod.string().nullish(),
   "targetLocation": zod.string().nullish(),
   "targetLanguage": zod.string().nullish(),
   "status": zod.enum(['active', 'paused', 'completed']),
   "keywordCount": zod.number().optional(),
   "searchAddress": zod.string().nullish(),
-  "planType": zod.string().nullish(),
+  "planId": zod.number().nullish(),
+  "planName": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "subscriptionId": zod.string().nullish(),
   "cardLast4": zod.string().nullish(),
   "startDate": zod.string().nullish(),
   "nextBillingDate": zod.string().nullish(),
+  "businessId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const GetClientCampaignsResponse = zod.array(GetClientCampaignsResponseItem)
@@ -251,7 +265,8 @@ export const GetClientKeywordsResponseItem = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 export const GetClientKeywordsResponse = zod.array(GetClientKeywordsResponseItem)
 
@@ -378,6 +393,8 @@ export const ListBusinessesResponseItem = zod.object({
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
   "zipCode": zod.string().nullish(),
+  "isSab": zod.boolean().optional(),
+  "serviceArea": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
@@ -398,6 +415,8 @@ export const CreateBusinessBody = zod.object({
   "hours": zod.string().optional(),
   "gmbUrl": zod.string().optional(),
   "zipCode": zod.string().optional(),
+  "isSab": zod.boolean().optional(),
+  "serviceArea": zod.string().optional(),
   "createdBy": zod.string().optional()
 })
 
@@ -420,6 +439,8 @@ export const GetBusinessResponse = zod.object({
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
   "zipCode": zod.string().nullish(),
+  "isSab": zod.boolean().optional(),
+  "serviceArea": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
@@ -442,6 +463,8 @@ export const UpdateBusinessBody = zod.object({
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
   "zipCode": zod.string().nullish(),
+  "isSab": zod.boolean().optional(),
+  "serviceArea": zod.string().nullish(),
   "createdBy": zod.string().nullish()
 })
 
@@ -456,6 +479,8 @@ export const UpdateBusinessResponse = zod.object({
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
   "zipCode": zod.string().nullish(),
+  "isSab": zod.boolean().optional(),
+  "serviceArea": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
@@ -471,13 +496,13 @@ export const DeleteBusinessParams = zod.object({
 
 
 /**
- * @summary Get the business profile for a client
+ * @summary Get all business profiles for a client
  */
-export const GetClientBusinessParams = zod.object({
+export const GetClientBusinessesParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const GetClientBusinessResponse = zod.object({
+const BusinessItem = zod.object({
   "id": zod.number(),
   "clientId": zod.number(),
   "businessName": zod.string(),
@@ -488,10 +513,17 @@ export const GetClientBusinessResponse = zod.object({
   "hours": zod.string().nullish(),
   "gmbUrl": zod.string().nullish(),
   "zipCode": zod.string().nullish(),
+  "isSab": zod.boolean().optional(),
+  "serviceArea": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string().optional()
 })
+
+export const GetClientBusinessesResponse = zod.array(BusinessItem)
+
+export const GetClientBusinessParams = GetClientBusinessesParams
+export const GetClientBusinessResponse = BusinessItem
 
 
 /**
@@ -507,18 +539,20 @@ export const ListCampaignsResponseItem = zod.object({
   "clientId": zod.number(),
   "clientName": zod.string().nullish(),
   "name": zod.string(),
-  "targetDomain": zod.string(),
+  "targetDomain": zod.string().nullish(),
   "targetLocation": zod.string().nullish(),
   "targetLanguage": zod.string().nullish(),
   "status": zod.enum(['active', 'paused', 'completed']),
   "keywordCount": zod.number().optional(),
   "searchAddress": zod.string().nullish(),
-  "planType": zod.string().nullish(),
+  "planId": zod.number().nullish(),
+  "planName": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "subscriptionId": zod.string().nullish(),
   "cardLast4": zod.string().nullish(),
   "startDate": zod.string().nullish(),
   "nextBillingDate": zod.string().nullish(),
+  "businessId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 export const ListCampaignsResponse = zod.array(ListCampaignsResponseItem)
@@ -535,7 +569,8 @@ export const CreateCampaignBody = zod.object({
   "targetLanguage": zod.string().optional(),
   "status": zod.enum(['active', 'paused', 'completed']).optional(),
   "searchAddress": zod.string().optional(),
-  "planType": zod.string().optional(),
+  "planId": zod.number().optional(),
+  "businessId": zod.number().optional(),
   "createdBy": zod.string().optional(),
   "subscriptionId": zod.string().optional(),
   "cardLast4": zod.string().optional(),
@@ -556,18 +591,20 @@ export const GetCampaignResponse = zod.object({
   "clientId": zod.number(),
   "clientName": zod.string().nullish(),
   "name": zod.string(),
-  "targetDomain": zod.string(),
+  "targetDomain": zod.string().nullish(),
   "targetLocation": zod.string().nullish(),
   "targetLanguage": zod.string().nullish(),
   "status": zod.enum(['active', 'paused', 'completed']),
   "keywordCount": zod.number().optional(),
   "searchAddress": zod.string().nullish(),
-  "planType": zod.string().nullish(),
+  "planId": zod.number().nullish(),
+  "planName": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "subscriptionId": zod.string().nullish(),
   "cardLast4": zod.string().nullish(),
   "startDate": zod.string().nullish(),
   "nextBillingDate": zod.string().nullish(),
+  "businessId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -581,12 +618,13 @@ export const UpdateCampaignParams = zod.object({
 
 export const UpdateCampaignBody = zod.object({
   "name": zod.string().optional(),
-  "targetDomain": zod.string().optional(),
+  "targetDomain": zod.string().nullish(),
   "targetLocation": zod.string().nullish(),
   "targetLanguage": zod.string().nullish(),
   "status": zod.enum(['active', 'paused', 'completed']).optional(),
   "searchAddress": zod.string().nullish(),
-  "planType": zod.string().nullish(),
+  "planId": zod.number().nullish(),
+  "businessId": zod.number().nullish(),
   "createdBy": zod.string().nullish(),
   "subscriptionId": zod.string().nullish(),
   "cardLast4": zod.string().nullish(),
@@ -599,18 +637,20 @@ export const UpdateCampaignResponse = zod.object({
   "clientId": zod.number(),
   "clientName": zod.string().nullish(),
   "name": zod.string(),
-  "targetDomain": zod.string(),
+  "targetDomain": zod.string().nullish(),
   "targetLocation": zod.string().nullish(),
   "targetLanguage": zod.string().nullish(),
   "status": zod.enum(['active', 'paused', 'completed']),
   "keywordCount": zod.number().optional(),
   "searchAddress": zod.string().nullish(),
-  "planType": zod.string().nullish(),
+  "planId": zod.number().nullish(),
+  "planName": zod.string().nullish(),
   "createdBy": zod.string().nullish(),
   "subscriptionId": zod.string().nullish(),
   "cardLast4": zod.string().nullish(),
   "startDate": zod.string().nullish(),
   "nextBillingDate": zod.string().nullish(),
+  "businessId": zod.number().nullish(),
   "createdAt": zod.string()
 })
 
@@ -645,7 +685,8 @@ export const GetCampaignKeywordsResponseItem = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 export const GetCampaignKeywordsResponse = zod.array(GetCampaignKeywordsResponseItem)
 
@@ -672,7 +713,8 @@ export const ListKeywordsResponseItem = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 export const ListKeywordsResponse = zod.array(ListKeywordsResponseItem)
 
@@ -688,7 +730,8 @@ export const CreateKeywordBody = zod.object({
   "isActive": zod.boolean().optional(),
   "currentRank": zod.number().optional(),
   "previousRank": zod.number().optional(),
-  "searchVolume": zod.number().optional()
+  "searchVolume": zod.number().optional(),
+  "searchLocation": zod.string().optional()
 })
 
 
@@ -723,7 +766,8 @@ export const GetKeywordResponse = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 
 
@@ -741,7 +785,8 @@ export const UpdateKeywordBody = zod.object({
   "isActive": zod.boolean().optional(),
   "currentRank": zod.number().nullish(),
   "previousRank": zod.number().nullish(),
-  "searchVolume": zod.number().nullish()
+  "searchVolume": zod.number().nullish(),
+  "searchLocation": zod.string().nullish()
 })
 
 export const UpdateKeywordResponse = zod.object({
@@ -759,7 +804,8 @@ export const UpdateKeywordResponse = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 
 
@@ -807,7 +853,8 @@ export const RefreshKeywordRankResponse = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 
 
@@ -833,7 +880,8 @@ export const VerifyKeywordResponse = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 
 
@@ -859,7 +907,8 @@ export const UnverifyKeywordResponse = zod.object({
   "rankChange": zod.number().nullish(),
   "isVerified": zod.boolean(),
   "verifiedAt": zod.string().nullish(),
-  "lastUpdated": zod.string()
+  "lastUpdated": zod.string(),
+  "searchLocation": zod.string().nullish()
 })
 
 
@@ -992,40 +1041,6 @@ export const DeleteBacklinkParams = zod.object({
 
 
 /**
- * @summary List competitors
- */
-export const ListCompetitorsQueryParams = zod.object({
-  "clientId": zod.coerce.number().optional()
-})
-
-export const ListCompetitorsResponseItem = zod.object({
-  "id": zod.number(),
-  "clientId": zod.number(),
-  "domain": zod.string(),
-  "backlinkCount": zod.number().nullish(),
-  "createdAt": zod.string()
-})
-export const ListCompetitorsResponse = zod.array(ListCompetitorsResponseItem)
-
-
-/**
- * @summary Add a competitor
- */
-export const CreateCompetitorBody = zod.object({
-  "clientId": zod.number(),
-  "domain": zod.string()
-})
-
-
-/**
- * @summary Delete a competitor
- */
-export const DeleteCompetitorParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-
-/**
  * @summary List reports
  */
 export const ListReportsQueryParams = zod.object({
@@ -1071,3 +1086,61 @@ export const GetReportResponse = zod.object({
 })
 
 
+/**
+ * @summary Get monthly revenue chart data
+ */
+export const GetDashboardRevenueResponseItem = zod.object({
+  "month": zod.string(),
+  "revenue": zod.number(),
+})
+export const GetDashboardRevenueResponse = zod.array(GetDashboardRevenueResponseItem)
+
+
+/**
+ * @summary Get keyword rank drop alerts
+ */
+export const GetKeywordAlertsResponseItem = zod.object({
+  "keywordId": zod.number(),
+  "keywordText": zod.string(),
+  "campaignName": zod.string(),
+  "clientName": zod.string(),
+  "previousRank": zod.number().nullish(),
+  "currentRank": zod.number().nullish(),
+  "drop": zod.number(),
+})
+export const GetKeywordAlertsResponse = zod.array(GetKeywordAlertsResponseItem)
+
+
+/**
+ * @summary List competitors
+ */
+export const ListCompetitorsQueryParams = zod.object({
+  "clientId": zod.coerce.number().optional(),
+})
+
+export const ListCompetitorsResponseItem = zod.object({
+  "id": zod.number(),
+  "clientId": zod.number(),
+  "domain": zod.string(),
+  "backlinkCount": zod.number().nullish(),
+  "createdAt": zod.string(),
+})
+export const ListCompetitorsResponse = zod.array(ListCompetitorsResponseItem)
+
+
+/**
+ * @summary Add a competitor
+ */
+export const CreateCompetitorBody = zod.object({
+  "clientId": zod.number(),
+  "domain": zod.string(),
+  "backlinkCount": zod.number().optional(),
+})
+
+
+/**
+ * @summary Delete a competitor
+ */
+export const DeleteCompetitorParams = zod.object({
+  "id": zod.coerce.number(),
+})

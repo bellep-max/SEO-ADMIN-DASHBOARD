@@ -15,7 +15,8 @@ export interface CampaignInput {
   targetLanguage?: string;
   status?: CampaignInputStatus;
   searchAddress?: string;
-  planType?: string;
+  planId?: number;
+  businessId?: number;
   createdBy?: string;
   subscriptionId?: string;
   cardLast4?: string;

@@ -16,5 +16,7 @@ export interface BusinessInput {
   hours?: string;
   gmbUrl?: string;
   zipCode?: string;
+  isSab?: boolean;
+  serviceArea?: string;
   createdBy?: string;
 }

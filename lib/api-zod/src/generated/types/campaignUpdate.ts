@@ -18,7 +18,9 @@ export interface CampaignUpdate {
   /** @nullable */
   searchAddress?: string | null;
   /** @nullable */
-  planType?: string | null;
+  planId?: number | null;
+  /** @nullable */
+  businessId?: number | null;
   /** @nullable */
   createdBy?: string | null;
   /** @nullable */

@@ -18,4 +18,6 @@ export interface KeywordUpdate {
   previousRank?: number | null;
   /** @nullable */
   searchVolume?: number | null;
+  /** @nullable */
+  searchLocation?: string | null;
 }

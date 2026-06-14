@@ -24,6 +24,9 @@ export interface Business {
   gmbUrl?: string | null;
   /** @nullable */
   zipCode?: string | null;
+  isSab?: boolean;
+  /** @nullable */
+  serviceArea?: string | null;
   /** @nullable */
   createdBy?: string | null;
   createdAt: string;

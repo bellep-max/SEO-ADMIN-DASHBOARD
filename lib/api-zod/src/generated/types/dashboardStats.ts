@@ -9,8 +9,7 @@
 export interface DashboardStats {
   totalClients: number;
   activeClients?: number;
+  inactiveClients?: number;
   activeCampaigns: number;
   totalKeywords: number;
-  newBacklinks30d: number;
-  totalRevenue?: number;
 }

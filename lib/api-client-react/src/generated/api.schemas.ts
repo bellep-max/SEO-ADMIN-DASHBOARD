@@ -28,11 +28,45 @@ export interface AuthResponse {
 export interface DashboardStats {
   totalClients: number;
   activeClients?: number;
+  inactiveClients?: number;
   activeCampaigns: number;
   totalKeywords: number;
-  newBacklinks30d: number;
+  newBacklinks30d?: number;
   totalRevenue?: number;
 }
+
+export interface RevenuePoint {
+  month: string;
+  revenue: number;
+}
+
+export interface KeywordAlert {
+  keywordId: number;
+  keywordText: string;
+  campaignName: string;
+  clientName: string;
+  previousRank?: number | null;
+  currentRank?: number | null;
+  drop: number;
+}
+
+export interface Competitor {
+  id: number;
+  clientId: number;
+  domain: string;
+  backlinkCount?: number | null;
+  createdAt: string;
+}
+
+export interface CompetitorInput {
+  clientId: number;
+  domain: string;
+  backlinkCount?: number;
+}
+
+export type ListCompetitorsParams = {
+clientId?: number;
+};
 
 export interface ActivityItem {
   id: number;
@@ -43,22 +77,6 @@ export interface ActivityItem {
   createdAt: string;
 }
 
-export interface RevenueDataPoint {
-  month: string;
-  revenue: number;
-}
-
-export interface KeywordAlert {
-  keywordId: number;
-  keywordText: string;
-  campaignName: string;
-  clientName: string;
-  /** @nullable */
-  previousRank: number | null;
-  /** @nullable */
-  currentRank: number | null;
-  drop: number;
-}
 
 export type ClientStatus = typeof ClientStatus[keyof typeof ClientStatus];
 
@@ -83,6 +101,18 @@ export interface Client {
   /** @nullable */
   planName?: string | null;
   status: ClientStatus;
+  /** @nullable */
+  accountType?: string | null;
+  /** @nullable */
+  accountUser?: string | null;
+  /** @nullable */
+  accountUserName?: string | null;
+  /** @nullable */
+  contactBillingEmail?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
+  businessCount?: number;
+  campaignCount?: number;
   createdAt: string;
   updatedAt?: string;
 }
@@ -103,6 +133,11 @@ export interface ClientInput {
   websiteUrl?: string;
   assignedPlanId?: number;
   status?: ClientInputStatus;
+  accountType?: string;
+  accountUser?: string;
+  accountUserName?: string;
+  contactBillingEmail?: string;
+  createdBy?: string;
 }
 
 export type ClientUpdateStatus = typeof ClientUpdateStatus[keyof typeof ClientUpdateStatus];
@@ -122,6 +157,16 @@ export interface ClientUpdate {
   /** @nullable */
   assignedPlanId?: number | null;
   status?: ClientUpdateStatus;
+  /** @nullable */
+  accountType?: string | null;
+  /** @nullable */
+  accountUser?: string | null;
+  /** @nullable */
+  accountUserName?: string | null;
+  /** @nullable */
+  contactBillingEmail?: string | null;
+  /** @nullable */
+  createdBy?: string | null;
 }
 
 export interface Business {
@@ -142,6 +187,9 @@ export interface Business {
   gmbUrl?: string | null;
   /** @nullable */
   zipCode?: string | null;
+  isSab?: boolean;
+  /** @nullable */
+  serviceArea?: string | null;
   /** @nullable */
   createdBy?: string | null;
   createdAt: string;
@@ -158,6 +206,8 @@ export interface BusinessInput {
   hours?: string;
   gmbUrl?: string;
   zipCode?: string;
+  isSab?: boolean;
+  serviceArea?: string;
   createdBy?: string;
 }
 
@@ -177,6 +227,9 @@ export interface BusinessUpdate {
   gmbUrl?: string | null;
   /** @nullable */
   zipCode?: string | null;
+  isSab?: boolean;
+  /** @nullable */
+  serviceArea?: string | null;
   /** @nullable */
   createdBy?: string | null;
 }
@@ -231,7 +284,8 @@ export interface Campaign {
   /** @nullable */
   clientName?: string | null;
   name: string;
-  targetDomain: string;
+  /** @nullable */
+  targetDomain?: string | null;
   /** @nullable */
   targetLocation?: string | null;
   /** @nullable */
@@ -241,7 +295,11 @@ export interface Campaign {
   /** @nullable */
   searchAddress?: string | null;
   /** @nullable */
-  planType?: string | null;
+  planId?: number | null;
+  /** @nullable */
+  planName?: string | null;
+  /** @nullable */
+  businessId?: number | null;
   /** @nullable */
   createdBy?: string | null;
   /** @nullable */
@@ -272,7 +330,8 @@ export interface CampaignInput {
   targetLanguage?: string;
   status?: CampaignInputStatus;
   searchAddress?: string;
-  planType?: string;
+  planId?: number;
+  businessId?: number;
   createdBy?: string;
   subscriptionId?: string;
   cardLast4?: string;
@@ -291,7 +350,8 @@ export const CampaignUpdateStatus = {
 
 export interface CampaignUpdate {
   name?: string;
-  targetDomain?: string;
+  /** @nullable */
+  targetDomain?: string | null;
   /** @nullable */
   targetLocation?: string | null;
   /** @nullable */
@@ -300,7 +360,9 @@ export interface CampaignUpdate {
   /** @nullable */
   searchAddress?: string | null;
   /** @nullable */
-  planType?: string | null;
+  planId?: number | null;
+  /** @nullable */
+  businessId?: number | null;
   /** @nullable */
   createdBy?: string | null;
   /** @nullable */
@@ -344,6 +406,8 @@ export interface Keyword {
   /** @nullable */
   verifiedAt?: string | null;
   lastUpdated: string;
+  /** @nullable */
+  searchLocation?: string | null;
 }
 
 export type KeywordInputKeywordType = typeof KeywordInputKeywordType[keyof typeof KeywordInputKeywordType];
@@ -363,6 +427,7 @@ export interface KeywordInput {
   currentRank?: number;
   previousRank?: number;
   searchVolume?: number;
+  searchLocation?: string;
 }
 
 export type KeywordUpdateKeywordType = typeof KeywordUpdateKeywordType[keyof typeof KeywordUpdateKeywordType];
@@ -384,6 +449,8 @@ export interface KeywordUpdate {
   previousRank?: number | null;
   /** @nullable */
   searchVolume?: number | null;
+  /** @nullable */
+  searchLocation?: string | null;
 }
 
 export interface KeywordBulkInput {
@@ -480,19 +547,6 @@ export interface DisavowList {
   count: number;
 }
 
-export interface Competitor {
-  id: number;
-  clientId: number;
-  domain: string;
-  /** @nullable */
-  backlinkCount?: number | null;
-  createdAt: string;
-}
-
-export interface CompetitorInput {
-  clientId: number;
-  domain: string;
-}
 
 export interface Report {
   id: number;
@@ -516,6 +570,10 @@ export type ListClientsParams = {
 search?: string;
 page?: number;
 limit?: number;
+type?: string;
+status?: string;
+plan?: string;
+location?: string;
 };
 
 export type ListBusinessesParams = {
@@ -544,9 +602,6 @@ export type GetDisavowListParams = {
 clientId?: number;
 };
 
-export type ListCompetitorsParams = {
-clientId?: number;
-};
 
 export type ListReportsParams = {
 clientId?: number;
