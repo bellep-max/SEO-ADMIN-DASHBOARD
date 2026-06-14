@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Trash2 } from "lucide-react";
@@ -17,6 +18,7 @@ export default function Plans() {
   const createPlan = useCreatePlan();
   const deletePlan = useDeletePlan();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,15 +48,15 @@ export default function Plans() {
     });
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure?")) {
-      deletePlan.mutate({ id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListPlansQueryKey() });
-          toast({ title: "Plan deleted" });
-        }
-      });
-    }
+  const confirmDelete = () => {
+    if (deleteTarget == null) return;
+    deletePlan.mutate({ id: deleteTarget }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListPlansQueryKey() });
+        toast({ title: "Plan deleted" });
+        setDeleteTarget(null);
+      }
+    });
   };
 
   return (
@@ -138,7 +140,7 @@ export default function Plans() {
                   <TableCell>{plan.backlinkCheckLimit}</TableCell>
                   <TableCell>{plan.auditLimit || "Unlimited"}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(plan.id)} className="text-muted-foreground hover:text-destructive">
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(plan.id)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -148,6 +150,20 @@ export default function Plans() {
           </TableBody>
         </Table>
       </div>
+      <AlertDialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete plan?</AlertDialogTitle>
+            <AlertDialogDescription>This will permanently remove the plan and cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

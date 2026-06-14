@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trash2, Download, ExternalLink, AlertTriangle } from "lucide-react";
 
@@ -20,15 +21,17 @@ export default function Backlinks() {
   const disavowParams = { clientId: clientId || 0 };
   const { refetch: fetchDisavow } = useGetDisavowList(disavowParams, { query: { enabled: false, queryKey: getGetDisavowListQueryKey(disavowParams) } });
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure?")) {
-      deleteBacklink.mutate({ id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListBacklinksQueryKey() });
-          toast({ title: "Backlink deleted" });
-        }
-      });
-    }
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
+
+  const confirmDelete = () => {
+    if (deleteTarget == null) return;
+    deleteBacklink.mutate({ id: deleteTarget }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListBacklinksQueryKey() });
+        toast({ title: "Backlink deleted" });
+        setDeleteTarget(null);
+      }
+    });
   };
 
   const handleExportDisavow = async () => {
@@ -138,7 +141,7 @@ export default function Backlinks() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(link.id)} className="text-muted-foreground hover:text-destructive">
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(link.id)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -148,6 +151,21 @@ export default function Backlinks() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete backlink?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

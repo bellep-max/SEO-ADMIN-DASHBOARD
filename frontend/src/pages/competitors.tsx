@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +21,7 @@ export default function Competitors() {
   const createCompetitor = useCreateCompetitor();
   const deleteCompetitor = useDeleteCompetitor();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const [formData, setFormData] = useState({
     clientId: "",
@@ -28,11 +30,19 @@ export default function Competitors() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createCompetitor.mutate({ 
+    if (!formData.clientId) {
+      toast({ title: "Please select a client", variant: "destructive" });
+      return;
+    }
+    if (!formData.domain.trim()) {
+      toast({ title: "Please enter a competitor domain", variant: "destructive" });
+      return;
+    }
+    createCompetitor.mutate({
       data: {
         clientId: parseInt(formData.clientId),
-        domain: formData.domain,
-      } 
+        domain: formData.domain.trim(),
+      }
     }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListCompetitorsQueryKey() });
@@ -43,15 +53,15 @@ export default function Competitors() {
     });
   };
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure?")) {
-      deleteCompetitor.mutate({ id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListCompetitorsQueryKey() });
-          toast({ title: "Competitor removed" });
-        }
-      });
-    }
+  const confirmDelete = () => {
+    if (deleteTarget == null) return;
+    deleteCompetitor.mutate({ id: deleteTarget }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListCompetitorsQueryKey() });
+        toast({ title: "Competitor removed" });
+        setDeleteTarget(null);
+      }
+    });
   };
 
   return (
@@ -136,7 +146,7 @@ export default function Competitors() {
                     {competitor.backlinkCount?.toLocaleString() || "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(competitor.id)} className="text-muted-foreground hover:text-destructive">
+                    <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(competitor.id)} className="text-muted-foreground hover:text-destructive">
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </TableCell>
@@ -146,6 +156,20 @@ export default function Competitors() {
           </TableBody>
         </Table>
       </div>
+      <AlertDialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove competitor?</AlertDialogTitle>
+            <AlertDialogDescription>This will stop tracking this competitor domain. This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
