@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   useGetClient,
@@ -47,6 +47,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
@@ -55,6 +65,7 @@ import {
   ExternalLink,
   ArrowUp,
   ArrowDown,
+  ArrowLeft,
   Minus,
   Plus,
   Building2,
@@ -138,6 +149,7 @@ export default function ClientDetail() {
   const clientId = id ? parseInt(id, 10) : 0;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const { data: client, isLoading } = useGetClient<Client>(clientId, {
     query: { enabled: clientId > 0, queryKey: getGetClientQueryKey(clientId) },
@@ -215,6 +227,8 @@ export default function ClientDetail() {
 
   const [bizDialog, setBizDialog] = useState<{ mode: "add" | "edit"; biz?: BusinessProfile } | null>(null);
   const [bizForm, setBizForm] = useState<BusinessForm>(EMPTY_BIZ_FORM);
+  const [deleteBizTarget, setDeleteBizTarget] = useState<{ id: number; name: string } | null>(null);
+  const [deleteKwTarget, setDeleteKwTarget] = useState<number | null>(null);
 
   function openAddBiz() {
     setBizForm(EMPTY_BIZ_FORM);
@@ -312,6 +326,14 @@ export default function ClientDetail() {
 
   function handleEditClientSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!editClientForm.name.trim()) {
+      toast({ title: "Client name is required", variant: "destructive" });
+      return;
+    }
+    if (!editClientForm.email.trim()) {
+      toast({ title: "Email is required", variant: "destructive" });
+      return;
+    }
     updateClient.mutate(
       {
         id: clientId,
@@ -356,6 +378,10 @@ export default function ClientDetail() {
 
   const handleCreateCampaign = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!campaignForm.name.trim()) {
+      toast({ title: "Campaign name is required", variant: "destructive" });
+      return;
+    }
     createCampaign.mutate(
       {
         data: {
@@ -400,6 +426,14 @@ export default function ClientDetail() {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
+      <button
+        type="button"
+        onClick={() => navigate("/clients")}
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Clients
+      </button>
       <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-3">
@@ -701,11 +735,7 @@ export default function ClientDetail() {
                       <Button
                         variant="ghost" size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive"
-                        onClick={() => {
-                          if (confirm(`Delete "${biz.businessName}"? This cannot be undone.`)) {
-                            deleteBusiness.mutate(biz.id);
-                          }
-                        }}
+                        onClick={() => setDeleteBizTarget({ id: biz.id, name: biz.businessName })}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
@@ -1144,16 +1174,7 @@ export default function ClientDetail() {
                         <Button
                           variant="ghost" size="icon"
                           className="text-muted-foreground hover:text-destructive"
-                          onClick={() => {
-                            if (confirm("Delete this keyword?")) {
-                              deleteKeyword.mutate({ id: k.id }, {
-                                onSuccess: () => {
-                                  queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) });
-                                  toast({ title: "Keyword deleted" });
-                                },
-                              });
-                            }
-                          }}
+                          onClick={() => setDeleteKwTarget(k.id)}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -1221,6 +1242,55 @@ export default function ClientDetail() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Business Confirmation */}
+      <AlertDialog open={deleteBizTarget != null} onOpenChange={(open) => !open && setDeleteBizTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete business profile?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{deleteBizTarget?.name}" will be permanently deleted. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => { if (deleteBizTarget) { deleteBusiness.mutate(deleteBizTarget.id); setDeleteBizTarget(null); } }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete Keyword Confirmation */}
+      <AlertDialog open={deleteKwTarget != null} onOpenChange={(open) => !open && setDeleteKwTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete keyword?</AlertDialogTitle>
+            <AlertDialogDescription>This keyword will be permanently removed. This cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteKwTarget == null) return;
+                deleteKeyword.mutate({ id: deleteKwTarget }, {
+                  onSuccess: () => {
+                    queryClient.invalidateQueries({ queryKey: getGetClientKeywordsQueryKey(clientId) });
+                    toast({ title: "Keyword deleted" });
+                    setDeleteKwTarget(null);
+                  },
+                });
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

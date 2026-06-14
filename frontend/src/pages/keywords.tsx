@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trash2, RefreshCw, ArrowUp, ArrowDown, Minus, CheckCircle2, Plus, Link2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { AddKeywordDialog } from "@/components/add-keyword-dialog";
 
@@ -136,18 +137,19 @@ export default function Keywords() {
 
   const deleteKeyword = useDeleteKeyword();
   const refreshRank = useRefreshKeywordRank();
+  const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
   const displayData = tab === "verified" ? data?.filter(k => k.isVerified) : data;
 
-  const handleDelete = (id: number) => {
-    if (confirm("Are you sure?")) {
-      deleteKeyword.mutate({ id }, {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getListKeywordsQueryKey() });
-          toast({ title: "Keyword deleted" });
-        }
-      });
-    }
+  const confirmDelete = () => {
+    if (deleteTarget == null) return;
+    deleteKeyword.mutate({ id: deleteTarget }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListKeywordsQueryKey() });
+        toast({ title: "Keyword deleted" });
+        setDeleteTarget(null);
+      }
+    });
   };
 
   const handleRefresh = (id: number) => {
@@ -287,7 +289,7 @@ export default function Keywords() {
                         <Button variant="ghost" size="icon" onClick={() => handleRefresh(keyword.id)} disabled={refreshRank.isPending} title="Refresh Rank">
                           <RefreshCw className={`w-4 h-4 text-muted-foreground hover:text-primary ${refreshRank.isPending ? "animate-spin" : ""}`} />
                         </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(keyword.id)} className="text-muted-foreground hover:text-destructive">
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(keyword.id)} className="text-muted-foreground hover:text-destructive">
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </TableCell>
@@ -307,6 +309,21 @@ export default function Keywords() {
         defaultCampaignId={campaignId}
         onCreated={() => queryClient.invalidateQueries({ queryKey: getListKeywordsQueryKey() })}
       />
+
+      <AlertDialog open={deleteTarget != null} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete keyword?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
