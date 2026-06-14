@@ -400,7 +400,7 @@ export function GeoGridHeatmap({ clientId, clientName, campaigns, businesses }: 
     toast({ title: `Generated ${done}/${configs.length} grids` });
   }
 
-  function buildPrintHTML(cfg: GeoGridConfig, results: GeoGridResult[]) {
+  function buildPageHTML(cfg: GeoGridConfig, results: GeoGridResult[]): string {
     const size = cfg.gridSize;
     const grid: (GeoGridResult | null)[][] = Array.from({ length: size }, () => Array(size).fill(null));
     results.forEach(r => { if (r.gridRow < size && r.gridCol < size) grid[r.gridRow][r.gridCol] = r; });
@@ -419,51 +419,79 @@ export function GeoGridHeatmap({ clientId, clientName, campaigns, businesses }: 
     }
 
     const gridHtml = grid.map(row =>
-      `<div style="display:flex;gap:${gap}px;margin-bottom:${gap}px">${row.map((cell, ci) => {
+      `<div style="display:flex;gap:${gap}px;margin-bottom:${gap}px">${row.map(cell => {
         const c = dotColor(cell?.rank ?? null);
         const label = cell?.rank == null ? "—" : cell.rank >= 30 ? "30+" : String(cell.rank);
         return `<div style="width:${dotPx}px;height:${dotPx}px;border-radius:50%;background:${c.bg};color:${c.text};display:flex;align-items:center;justify-content:center;font-size:${size > 7 ? 11 : 13}px;font-weight:800;">${label}</div>`;
       }).join("")}</div>`
     ).join("");
 
-    return `<!DOCTYPE html><html><head><title>Geo Grid - ${cfg.keyword}</title>
-<style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:Arial,sans-serif;background:#0f172a;color:#f1f5f9;}
-.wrap{max-width:640px;margin:40px auto;background:#0f172a;border-radius:12px;overflow:hidden;}
+    const legendHtml = LEGEND.map(l =>
+      `<span style="display:flex;align-items:center;gap:4px;font-size:11px;color:#94a3b8"><span style="width:11px;height:11px;border-radius:50%;background:${l.bg};display:inline-block"></span>${l.label}</span>`
+    ).join("");
+
+    return `<div class="page">
+  <div class="topbar"><span class="client">${clientName}</span><span class="date-label">${date}</span></div>
+  <div class="body">
+    <div class="kw-label">Keyword</div>
+    <div class="kw">${cfg.keyword}</div>
+    ${cfg.centerAddress ? `<div class="addr">📍 ${cfg.centerAddress}</div>` : ""}
+    <div class="grid-wrap">${gridHtml}</div>
+    <div class="legend">${legendHtml}</div>
+  </div>
+  <div class="footer"><span class="fl">LATEST RANK DATE</span><span class="fr">${date}</span></div>
+</div>`;
+  }
+
+  function openPrintWindow(pages: string[], title: string) {
+    const w = window.open("", "_blank");
+    if (!w) { toast({ title: "Pop-up blocked — allow pop-ups and try again", variant: "destructive" }); return; }
+    w.document.write(`<!DOCTYPE html><html><head><title>${title}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:Arial,sans-serif;background:#0f172a;color:#f1f5f9;}
+.page{max-width:640px;margin:0 auto;background:#0f172a;page-break-after:always;break-after:page;}
+.page:last-child{page-break-after:avoid;break-after:avoid;}
 .topbar{background:#1e293b;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;}
 .client{color:#94a3b8;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
 .date-label{color:#64748b;font-size:11px;}
-.body{padding:20px;}
+.body{padding:24px 20px 16px;}
 .kw-label{color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px;}
-.kw{color:#f1f5f9;font-size:26px;font-weight:900;margin-bottom:16px;}
+.kw{color:#f1f5f9;font-size:26px;font-weight:900;margin-bottom:12px;line-height:1.15;}
 .addr{color:#64748b;font-size:12px;margin-bottom:12px;}
-.grid{display:inline-flex;flex-direction:column;gap:0;}
-.legend{display:flex;gap:12px;margin-top:16px;flex-wrap:wrap;}
-.ldot{width:11px;height:11px;border-radius:50%;display:inline-block;margin-right:3px;}
-.footer{background:#1e293b;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin-top:0;}
+.grid-wrap{display:inline-flex;flex-direction:column;}
+.legend{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;}
+.footer{background:#1e293b;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;}
 .fl{color:#64748b;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
 .fr{color:#e2e8f0;font-size:12px;font-weight:700;}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head>
-<body><div class="wrap">
-<div class="topbar"><span class="client">${clientName}</span><span class="date-label">${date}</span></div>
-<div class="body">
-  <div class="kw-label">Keyword</div>
-  <div class="kw">${cfg.keyword}</div>
-  ${cfg.centerAddress ? `<div class="addr">📍 ${cfg.centerAddress}</div>` : ""}
-  <div class="grid">${gridHtml}</div>
-  <div class="legend">
-    ${LEGEND.map(l => `<span style="display:flex;align-items:center;font-size:11px;color:#94a3b8"><span class="ldot" style="background:${l.bg}"></span>${l.label}</span>`).join("")}
-  </div>
-</div>
-<div class="footer"><span class="fl">LATEST RANK DATE</span><span class="fr">${date}</span></div>
-</div><script>window.onload=()=>window.print()</script></body></html>`;
+@media print{
+  body{-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#0f172a;}
+  .page{margin:0;max-width:100%;}
+}
+</style></head><body>${pages.join("\n")}<script>window.onload=()=>window.print()</script></body></html>`);
+    w.document.close();
   }
 
   function handleDownloadPDF(cfg: GeoGridConfig) {
     const results: GeoGridResult[] = queryClient.getQueryData([`/api/geo-grids/${cfg.id}/results`]) ?? [];
-    const w = window.open("", "_blank");
-    if (!w) return;
-    w.document.write(buildPrintHTML(cfg, results));
-    w.document.close();
+    openPrintWindow([buildPageHTML(cfg, results)], `Geo Grid - ${cfg.keyword}`);
+  }
+
+  function handleDownloadAllPDF() {
+    if (configs.length === 0) return;
+    const withData = configs.filter(cfg => {
+      const r: GeoGridResult[] = queryClient.getQueryData([`/api/geo-grids/${cfg.id}/results`]) ?? [];
+      return r.length > 0;
+    });
+    if (withData.length === 0) {
+      toast({ title: "Generate grids first before downloading PDF", variant: "destructive" });
+      return;
+    }
+    const pages = withData.map(cfg => {
+      const results: GeoGridResult[] = queryClient.getQueryData([`/api/geo-grids/${cfg.id}/results`]) ?? [];
+      return buildPageHTML(cfg, results);
+    });
+    openPrintWindow(pages, `Geo Grid Report - ${clientName}`);
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -493,19 +521,30 @@ export function GeoGridHeatmap({ clientId, clientName, campaigns, businesses }: 
           <h3 className="font-semibold text-sm">Geo-Grid Heatmap</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Rank distribution across geographic locations</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {configs.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGenerateAll}
-              disabled={generatingAll}
-            >
-              {generatingAll
-                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                : <Zap className="w-4 h-4 mr-2" />}
-              Generate All ({configs.length})
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGenerateAll}
+                disabled={generatingAll}
+              >
+                {generatingAll
+                  ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  : <Zap className="w-4 h-4 mr-2" />}
+                Generate All ({configs.length})
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDownloadAllPDF}
+                disabled={generatingAll}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download All PDF
+              </Button>
+            </>
           )}
           <Button size="sm" onClick={() => setIsAddOpen(true)}>
             <Plus className="w-4 h-4 mr-2" /> Add Grid
