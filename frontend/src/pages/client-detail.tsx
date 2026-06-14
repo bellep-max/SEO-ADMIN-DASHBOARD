@@ -361,7 +361,7 @@ export default function ClientDetail() {
           name: campaignForm.name,
           searchAddress: campaignForm.searchAddress || undefined,
           planId: campaignForm.planId ? parseInt(campaignForm.planId) : undefined,
-          businessId: campaignForm.businessId ? parseInt(campaignForm.businessId) : undefined,
+          businessId: campaignForm.businessId && campaignForm.businessId !== "none" ? parseInt(campaignForm.businessId) : undefined,
           createdBy: campaignForm.createdBy || undefined,
           subscriptionId: campaignForm.subscriptionId || undefined,
           cardLast4: campaignForm.cardLast4 || undefined,
@@ -881,7 +881,7 @@ export default function ClientDetail() {
                         <SelectValue placeholder="Select business..." />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No specific business</SelectItem>
+                        <SelectItem value="none">No specific business</SelectItem>
                         {businesses.map((b) => (
                           <SelectItem key={b.id} value={b.id.toString()}>{b.businessName}</SelectItem>
                         ))}
