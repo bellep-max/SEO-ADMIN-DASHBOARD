@@ -325,7 +325,7 @@ export default function ClientDetail() {
           accountUserName: editClientForm.accountUserName || null,
           accountUser: editClientForm.accountUser || null,
           contactBillingEmail: editClientForm.contactBillingEmail || null,
-          assignedPlanId: editClientForm.assignedPlanId ? parseInt(editClientForm.assignedPlanId) : null,
+          assignedPlanId: editClientForm.assignedPlanId && editClientForm.assignedPlanId !== "none" ? parseInt(editClientForm.assignedPlanId) : null,
           createdBy: editClientForm.createdBy || null,
         } as any,
       },
@@ -340,11 +340,13 @@ export default function ClientDetail() {
     );
   }
 
+  const defaultCampaignName = client?.name ?? "";
+
   const EMPTY_CAMPAIGN_FORM = {
-    name: "",
+    name: defaultCampaignName,
     searchAddress: "",
     planId: "",
-    businessId: "",
+    businessId: "none",
     createdBy: "",
     subscriptionId: "",
     cardLast4: "",
@@ -373,7 +375,7 @@ export default function ClientDetail() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetClientCampaignsQueryKey(clientId) });
           setIsCampaignDialogOpen(false);
-          setCampaignForm(EMPTY_CAMPAIGN_FORM);
+          setCampaignForm({ ...EMPTY_CAMPAIGN_FORM, name: defaultCampaignName });
           toast({ title: "Campaign created", description: `"${campaignForm.name}" is now active.` });
         },
         onError: () => toast({ title: "Failed to create campaign", variant: "destructive" }),
@@ -625,7 +627,7 @@ export default function ClientDetail() {
                       onValueChange={(v) => setEditClientForm((p) => ({ ...p, assignedPlanId: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No Plan</SelectItem>
+                        <SelectItem value="none">No Plan</SelectItem>
                         {plans?.map((p) => (
                           <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                         ))}
@@ -859,14 +861,13 @@ export default function ClientDetail() {
                 </DialogHeader>
                 <form onSubmit={handleCreateCampaign} className="space-y-4 pt-1">
 
-                  {/* Campaign Name */}
+                  {/* Campaign Name — auto-filled from selected business, not editable */}
                   <div className="space-y-1">
                     <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Campaign Name</Label>
                     <Input
-                      required
+                      readOnly
                       value={campaignForm.name}
-                      onChange={(e) => setCampaignForm((p) => ({ ...p, name: e.target.value }))}
-                      placeholder={client.name}
+                      className="bg-muted text-muted-foreground cursor-not-allowed"
                     />
                   </div>
 
@@ -875,7 +876,14 @@ export default function ClientDetail() {
                     <Label className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Business</Label>
                     <Select
                       value={campaignForm.businessId}
-                      onValueChange={(v) => setCampaignForm((p) => ({ ...p, businessId: v }))}
+                      onValueChange={(v) => {
+                        const biz = businesses.find((b) => b.id.toString() === v);
+                        setCampaignForm((p) => ({
+                          ...p,
+                          businessId: v,
+                          name: biz ? biz.businessName : defaultCampaignName,
+                        }));
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select business..." />
