@@ -126,7 +126,7 @@ export function AddKeywordDialog({ open, onClose, campaigns, defaultCampaignId, 
 
   return (
     <Dialog open={open} onOpenChange={v => { if (!v) handleClose(); }}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Keyword</DialogTitle>
         </DialogHeader>
@@ -138,13 +138,18 @@ export function AddKeywordDialog({ open, onClose, campaigns, defaultCampaignId, 
               value={form.campaignId}
               onValueChange={v => { setForm(f => ({ ...f, campaignId: v })); setErrors(e => ({ ...e, campaignId: "" })); }}
             >
-              <SelectTrigger id="akd-campaign" className={errors.campaignId ? "border-destructive" : ""}>
+              <SelectTrigger id="akd-campaign" className={`[&>span]:truncate ${errors.campaignId ? "border-destructive" : ""}`}>
                 <SelectValue placeholder="Select a campaign…" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="max-h-60 overflow-y-auto">
                 {campaigns.map(c => (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.clientName} — {c.name}
+                  <SelectItem key={c.id} value={c.id.toString()} textValue={c.name}>
+                    <div className="flex flex-col py-0.5">
+                      <span className="font-medium leading-tight">{c.name}</span>
+                      {c.clientName && (
+                        <span className="text-xs text-muted-foreground leading-tight">{c.clientName}</span>
+                      )}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -153,20 +158,17 @@ export function AddKeywordDialog({ open, onClose, campaigns, defaultCampaignId, 
           </div>
 
           {selectedCampaign && (
-            <div className="rounded-lg border bg-muted/30 p-3 text-xs space-y-1.5">
-              <div className="grid grid-cols-2 gap-x-4">
+            <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 text-xs space-y-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/60">Selected Campaign</p>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-0.5">Client</p>
-                  <p className="font-medium text-foreground">{selectedCampaign.clientName}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Client</p>
+                  <p className="font-medium text-foreground truncate">{selectedCampaign.clientName}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-0.5">Domain</p>
-                  <p className="font-medium text-foreground">{selectedCampaign.targetDomain}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/60 mb-0.5">Domain</p>
+                  <p className="font-medium text-foreground truncate">{selectedCampaign.targetDomain || "—"}</p>
                 </div>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 mb-0.5">Campaign</p>
-                <p className="font-medium text-foreground">{selectedCampaign.name}</p>
               </div>
             </div>
           )}
