@@ -171,9 +171,9 @@ export const UpdateClientParams = zod.object({
 export const UpdateClientBody = zod.object({
   "name": zod.string().optional(),
   "email": zod.string().optional(),
-  "company": zod.string().optional(),
-  "phone": zod.string().optional(),
-  "websiteUrl": zod.string().optional(),
+  "company": zod.string().nullish(),
+  "phone": zod.string().nullish(),
+  "websiteUrl": zod.string().nullish(),
   "assignedPlanId": zod.number().nullish(),
   "status": zod.enum(['active', 'inactive']).optional(),
   "accountType": zod.string().nullish(),
