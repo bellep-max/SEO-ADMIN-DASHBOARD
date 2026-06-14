@@ -9,3 +9,4 @@ export * from "./backlinks";
 export * from "./reports";
 export * from "./activity_log";
 export * from "./competitors";
+export * from "./geo_grid";
