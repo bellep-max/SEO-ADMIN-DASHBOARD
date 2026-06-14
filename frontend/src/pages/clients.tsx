@@ -37,7 +37,7 @@ import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Trash2, Building2, Megaphone } from "lucide-react";
+import { Loader2, Plus, Search, Trash2, Building2, Megaphone, X } from "lucide-react";
 
 const SERVICE_CATEGORIES = [
   "Plumber", "Electrician", "Café", "Restaurant", "Dentist",
@@ -46,6 +46,7 @@ const SERVICE_CATEGORIES = [
 ];
 const CREATED_BY_ROLES = ["Admin", "Manager", "Sales Rep", "Agent", "Client"];
 const PLAN_TYPES = ["Basic", "Standard", "Premium", "Enterprise", "Custom"];
+const ACCOUNT_TYPES = ["Local SEO", "National SEO", "E-commerce", "Lead Gen", "Reputation", "Other"];
 
 function authFetch(url: string, opts?: RequestInit) {
   const token = localStorage.getItem("seo_admin_token") ?? "";
@@ -71,7 +72,9 @@ const EMPTY_CAMPAIGN = {
   subscriptionId: "", cardLast4: "", startDate: "", nextBillingDate: "",
 };
 const EMPTY_CLIENT = {
-  name: "", email: "", company: "", websiteUrl: "", assignedPlanId: "",
+  name: "", email: "", company: "", phone: "", websiteUrl: "",
+  assignedPlanId: "", status: "active", accountType: "",
+  accountUser: "", accountUserName: "", contactBillingEmail: "", createdBy: "",
 };
 
 type Step =
@@ -86,7 +89,15 @@ type FieldErrors = Partial<Record<string, string>>;
 
 export default function Clients() {
   const [search, setSearch] = useState("");
-  const { data, isLoading } = useListClients({ search });
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterPlan, setFilterPlan] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const { data, isLoading } = useListClients({
+    search: search || undefined,
+    status: filterStatus || undefined,
+    plan: filterPlan || undefined,
+    type: filterType || undefined,
+  });
   const { data: plans } = useListPlans();
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -177,8 +188,18 @@ export default function Clients() {
     createClient.mutate(
       {
         data: {
-          ...formData,
+          name: formData.name,
+          email: formData.email,
+          company: formData.company || undefined,
+          phone: formData.phone || undefined,
+          websiteUrl: formData.websiteUrl || undefined,
           assignedPlanId: formData.assignedPlanId ? parseInt(formData.assignedPlanId) : undefined,
+          status: (formData.status as "active" | "inactive") || "active",
+          accountType: formData.accountType || undefined,
+          accountUser: formData.accountUser || undefined,
+          accountUserName: formData.accountUserName || undefined,
+          contactBillingEmail: formData.contactBillingEmail || undefined,
+          createdBy: formData.createdBy || undefined,
         },
       },
       {
@@ -273,17 +294,44 @@ export default function Clients() {
           </Button>
         </div>
 
-        {/* Search */}
-        <div className="flex items-center space-x-2 max-w-sm">
-          <div className="relative flex-1">
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search clients..."
-              className="pl-8"
+              className="pl-8 w-56"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+          <Select value={filterStatus || "all"} onValueChange={v => setFilterStatus(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-36"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={filterPlan || "all"} onValueChange={v => setFilterPlan(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="All Plans" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Plans</SelectItem>
+              {plans?.map(p => <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterType || "all"} onValueChange={v => setFilterType(v === "all" ? "" : v)}>
+            <SelectTrigger className="w-40"><SelectValue placeholder="All Types" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {ACCOUNT_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          {(filterStatus || filterPlan || filterType) && (
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => { setFilterStatus(""); setFilterPlan(""); setFilterType(""); }}>
+              <X className="w-3.5 h-3.5 mr-1" /> Clear
+            </Button>
+          )}
         </div>
 
         {/* Table */}
@@ -395,7 +443,7 @@ export default function Clients() {
 
         {/* ── Step 1: Create Client ── */}
         <Dialog open={step === "create-client"} onOpenChange={(open) => !open && closeAll()}>
-          <DialogContent aria-describedby={undefined}>
+          <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>New Client</DialogTitle>
             </DialogHeader>
@@ -431,12 +479,22 @@ export default function Clients() {
                 <FieldError msg={formErrors.email} />
               </div>
 
-              <div className="space-y-1">
-                <Label>Company</Label>
-                <Input
-                  value={formData.company}
-                  onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))}
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Company</Label>
+                  <Input
+                    value={formData.company}
+                    onChange={(e) => setFormData((p) => ({ ...p, company: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Phone</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                    placeholder="+1 555-000-0000"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -450,18 +508,86 @@ export default function Clients() {
               </div>
 
               <div className="space-y-1">
-                <Label>Plan</Label>
+                <Label>Billing Email</Label>
+                <Input
+                  type="email"
+                  value={formData.contactBillingEmail}
+                  onChange={(e) => setFormData((p) => ({ ...p, contactBillingEmail: e.target.value }))}
+                  placeholder="billing@client.com"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Plan</Label>
+                  <Select
+                    value={formData.assignedPlanId}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, assignedPlanId: v }))}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select plan" /></SelectTrigger>
+                    <SelectContent>
+                      {plans?.map((p) => (
+                        <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Status</Label>
+                  <Select
+                    value={formData.status}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, status: v }))}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Account Type</Label>
                 <Select
-                  value={formData.assignedPlanId}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, assignedPlanId: v }))}
+                  value={formData.accountType}
+                  onValueChange={(v) => setFormData((p) => ({ ...p, accountType: v }))}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a plan" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
                   <SelectContent>
-                    {plans?.map((p) => (
-                      <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                    ))}
+                    {ACCOUNT_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Account User ID</Label>
+                  <Input
+                    value={formData.accountUser}
+                    onChange={(e) => setFormData((p) => ({ ...p, accountUser: e.target.value }))}
+                    placeholder="user@agency.com"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label>Account User Name</Label>
+                  <Input
+                    value={formData.accountUserName}
+                    onChange={(e) => setFormData((p) => ({ ...p, accountUserName: e.target.value }))}
+                    placeholder="Jane Doe"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Created By</Label>
+                <Select
+                  value={formData.createdBy}
+                  onValueChange={(v) => setFormData((p) => ({ ...p, createdBy: v }))}
+                >
+                  <SelectTrigger><SelectValue placeholder="Select role" /></SelectTrigger>
+                  <SelectContent>
+                    {CREATED_BY_ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
