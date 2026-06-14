@@ -444,7 +444,7 @@ export default function Clients() {
 
         {/* ── Step 1: Create Client ── */}
         <Dialog open={step === "create-client"} onOpenChange={(open) => !open && closeAll()}>
-          <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent aria-describedby={undefined} className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Client</DialogTitle>
             </DialogHeader>
@@ -624,7 +624,7 @@ export default function Clients() {
 
         {/* ── Step 3: Add Business Form ── */}
         <Dialog open={step === "add-business"} onOpenChange={(open) => !open && closeAll()}>
-          <DialogContent aria-describedby={undefined} className="max-w-lg">
+          <DialogContent aria-describedby={undefined} className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" />
@@ -757,7 +757,7 @@ export default function Clients() {
 
         {/* ── Step 5: Add Campaign Form ── */}
         <Dialog open={step === "add-campaign"} onOpenChange={(open) => !open && closeAll()}>
-          <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent aria-describedby={undefined} className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Megaphone className="w-4 h-4 text-primary" />

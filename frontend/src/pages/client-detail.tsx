@@ -547,7 +547,7 @@ export default function ClientDetail() {
 
           {/* ── Edit Client Dialog ── */}
           <Dialog open={editClientOpen} onOpenChange={setEditClientOpen}>
-            <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Edit Client</DialogTitle>
               </DialogHeader>
@@ -763,7 +763,7 @@ export default function ClientDetail() {
 
           {/* Add / Edit dialog */}
           <Dialog open={bizDialog !== null} onOpenChange={(open) => { if (!open) setBizDialog(null); }}>
-            <DialogContent aria-describedby={undefined} className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{isEditMode ? "Edit Business Profile" : "Add Business Profile"}</DialogTitle>
               </DialogHeader>
@@ -855,7 +855,7 @@ export default function ClientDetail() {
                   <Plus className="w-4 h-4 mr-2" /> Add Campaign
                 </Button>
               </DialogTrigger>
-              <DialogContent aria-describedby={undefined} className="max-w-lg max-h-[90vh] overflow-y-auto">
+              <DialogContent aria-describedby={undefined} className="max-w-xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Add Campaign</DialogTitle>
                 </DialogHeader>

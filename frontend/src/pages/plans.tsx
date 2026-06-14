@@ -68,7 +68,7 @@ export default function Plans() {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> Add Plan</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>New Plan</DialogTitle>
             </DialogHeader>

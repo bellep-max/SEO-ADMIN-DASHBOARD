@@ -120,7 +120,7 @@ export default function CampaignDetail() {
             <DialogTrigger asChild>
               <Button size="sm" variant="outline"><Plus className="w-4 h-4 mr-2" /> Add Keyword</Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Add Keyword to "{campaign.name}"</DialogTitle></DialogHeader>
               <form onSubmit={handleAddKeyword} className="space-y-4">
                 <div className="space-y-2">
