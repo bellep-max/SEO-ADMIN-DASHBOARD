@@ -34,10 +34,14 @@ async function formatClient(client: typeof clientsTable.$inferSelect) {
     const [plan] = await db.select().from(plansTable).where(eq(plansTable.id, client.assignedPlanId));
     planName = plan?.name ?? null;
   }
+  const [bizCount] = await db.select({ count: count() }).from(businessesTable).where(eq(businessesTable.clientId, client.id));
+  const [campCount] = await db.select({ count: count() }).from(campaignsTable).where(eq(campaignsTable.clientId, client.id));
   return {
     ...client,
     price: undefined,
     planName,
+    businessCount: bizCount?.count ?? 0,
+    campaignCount: campCount?.count ?? 0,
     createdAt: client.createdAt.toISOString(),
     updatedAt: client.updatedAt.toISOString(),
   };
@@ -46,13 +50,23 @@ async function formatClient(client: typeof clientsTable.$inferSelect) {
 router.get("/clients", requireAuth, async (req, res): Promise<void> => {
   const params = ListClientsQueryParams.safeParse(req.query);
   const search = params.success ? params.data.search : undefined;
+  const status = params.success ? params.data.status : undefined;
+  const type = params.success ? params.data.type : undefined;
+  const plan = params.success ? params.data.plan : undefined;
   const page = params.success ? (params.data.page ?? 1) : 1;
   const limit = params.success ? (params.data.limit ?? 20) : 20;
   const offset = (page - 1) * limit;
 
-  const whereClause = search
-    ? or(ilike(clientsTable.name, `%${search}%`), ilike(clientsTable.email, `%${search}%`))
-    : undefined;
+  const conditions = [];
+  if (search) conditions.push(or(ilike(clientsTable.name, `%${search}%`), ilike(clientsTable.email, `%${search}%`)));
+  if (status) conditions.push(eq(clientsTable.status, status));
+  if (type) conditions.push(eq(clientsTable.accountType, type));
+  if (plan) {
+    const [planRow] = await db.select({ id: plansTable.id }).from(plansTable).where(ilike(plansTable.name, plan));
+    if (planRow) conditions.push(eq(clientsTable.assignedPlanId, planRow.id));
+    else conditions.push(sql`1=0`);
+  }
+  const whereClause = conditions.length > 0 ? (conditions.length === 1 ? conditions[0] : sql`${conditions.reduce((a, b) => sql`${a} AND ${b}`)}`) : undefined;
 
   const [totalResult] = await db
     .select({ count: count() })
