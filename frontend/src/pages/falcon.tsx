@@ -120,12 +120,15 @@ export default function Falcon() {
       setScanLocResults(r.locations ?? []);
     } catch { /* ignore */ }
   };
+  const [scanProcessing, setScanProcessing] = useState(false);
+
   const runScan = async () => {
     if (!scanLoc) { toast({ title: "Pick a location first", variant: "destructive" }); return; }
     if (!scanForm.keyword.trim()) { toast({ title: "Enter a keyword", variant: "destructive" }); return; }
     setScanning(true);
+    let reportKey: string | undefined;
     try {
-      await authFetch("/api/falcon/run-scan", {
+      const res = await authFetch("/api/falcon/run-scan", {
         method: "POST",
         body: JSON.stringify({
           place_id: scanLoc.place_id, keyword: scanForm.keyword.trim(),
@@ -133,13 +136,33 @@ export default function Falcon() {
           grid_size: scanForm.gridSize, radius: scanForm.radius, measurement: scanForm.measurement, platform: scanForm.platform,
         }),
       });
-      toast({ title: "Scan complete", description: `${scanForm.keyword} · ${locName(scanLoc as unknown as LfReport["location"]) }` });
-      setScanOpen(false); setScanLoc(null); setScanLocSearch(""); setScanLocResults([]);
-      setScanForm({ keyword: "", gridSize: "7", radius: "1", measurement: "mi", platform: "google" });
-      setTab("reports"); loadReports(false);
+      reportKey = res?.report_key;
     } catch (e) {
       toast({ title: "Scan failed", description: (e as Error).message, variant: "destructive" });
-    } finally { setScanning(false); }
+      setScanning(false);
+      return;
+    }
+    // run-scan is async — LocalFalcon processes the grid for ~1-2 min. Close the
+    // dialog, then poll the report until it's ready and refresh the list.
+    setScanning(false);
+    setScanOpen(false); setScanLoc(null); setScanLocSearch(""); setScanLocResults([]);
+    setScanForm({ keyword: "", gridSize: "7", radius: "1", measurement: "mi", platform: "google" });
+    setTab("reports");
+    toast({ title: "Scan started", description: "LocalFalcon is processing the grid — this can take a minute." });
+    if (!reportKey) { loadReports(false); return; }
+    setScanProcessing(true);
+    try {
+      for (let i = 0; i < 18; i++) {
+        await new Promise(r => setTimeout(r, 10000));
+        try {
+          const rep = await authFetch(`/api/falcon/reports/${reportKey}`);
+          if (rep?.status !== "processing") { toast({ title: "Scan complete 🦅", description: "Heatmap ready." }); break; }
+        } catch { /* keep polling */ }
+      }
+    } finally {
+      setScanProcessing(false);
+      loadReports(false);
+    }
   };
 
   return (
@@ -164,6 +187,13 @@ export default function Falcon() {
             <p className="font-semibold text-amber-700 dark:text-amber-400">LocalFalcon not configured</p>
             <p className="text-muted-foreground">Set <code>LOCALFALCON_API_KEY</code> on the backend to enable scans, heatmaps, and locations.</p>
           </div>
+        </div>
+      )}
+
+      {scanProcessing && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center gap-2 text-sm">
+          <Loader2 className="w-4 h-4 animate-spin text-primary shrink-0" />
+          <span>Scan running on LocalFalcon — the new report will appear here when it's ready.</span>
         </div>
       )}
 
