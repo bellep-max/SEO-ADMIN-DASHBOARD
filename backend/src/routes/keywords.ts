@@ -1,8 +1,10 @@
 import { Router } from "express";
 import type { IRouter } from "express";
-import { db, keywordsTable, keywordRankHistoryTable, campaignsTable, clientsTable } from "@workspace/db";
+import { db, keywordsTable, keywordRankHistoryTable, campaignsTable, clientsTable, businessesTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
+import { serpRank, serpConfigured } from "../lib/serp";
+import { suggestKeywords } from "../lib/keyword-ideas";
 import {
   ListKeywordsQueryParams,
   ListKeywordsResponse,
@@ -149,10 +151,42 @@ router.post("/keywords/:id/refresh", requireAuth, async (req, res): Promise<void
   const [existing] = await db.select().from(keywordsTable).where(eq(keywordsTable.id, id));
   if (!existing) { res.status(404).json({ error: "Keyword not found" }); return; }
 
-  // Simulate rank change: random shift of -5 to +5
-  const currentRank = existing.currentRank ?? Math.floor(Math.random() * 50) + 1;
-  const shift = Math.floor(Math.random() * 11) - 5;
-  const newRank = Math.max(1, currentRank + shift);
+  if (!serpConfigured()) {
+    res.status(503).json({ error: "Rank measurement is not configured (SERP_API_KEY missing)." });
+    return;
+  }
+
+  const [campaign] = await db.select().from(campaignsTable).where(eq(campaignsTable.id, existing.campaignId));
+  // Target domain: campaign target → linked business website → client website.
+  let domain = campaign?.targetDomain ?? null;
+  if (!domain && campaign?.businessId) {
+    const [b] = await db.select({ website: businessesTable.website }).from(businessesTable).where(eq(businessesTable.id, campaign.businessId));
+    domain = b?.website ?? null;
+  }
+  if (!domain && campaign) {
+    const [c] = await db.select({ websiteUrl: clientsTable.websiteUrl }).from(clientsTable).where(eq(clientsTable.id, campaign.clientId));
+    domain = c?.websiteUrl ?? null;
+  }
+  if (!domain) {
+    res.status(400).json({ error: "No target domain/website set for this keyword's campaign." });
+    return;
+  }
+
+  // Location for the search: keyword's own search location → campaign target.
+  const location = existing.searchLocation ?? campaign?.targetLocation ?? campaign?.searchAddress ?? undefined;
+
+  // Measure a real rank: local/map-pack wins for "near me", else organic, null if absent.
+  let newRank: number | null;
+  try {
+    const { organic, local } = await serpRank(existing.keywordText, { location }, domain);
+    newRank = local ?? organic;
+  } catch (err) {
+    (req as typeof req & { log?: { error: (o: unknown, m: string) => void } }).log?.error(
+      { err, keywordId: id }, "serp keyword refresh failed",
+    );
+    res.status(502).json({ error: "Rank provider error — please retry." });
+    return;
+  }
 
   const [updated] = await db.update(keywordsTable).set({
     previousRank: existing.currentRank,
@@ -163,6 +197,25 @@ router.post("/keywords/:id/refresh", requireAuth, async (req, res): Promise<void
   await db.insert(keywordRankHistoryTable).values({ keywordId: id, rank: newRank });
 
   res.json(RefreshKeywordRankResponse.parse(await formatKeyword(updated)));
+});
+
+// POST /keywords/suggest — generate keyword ideas from a seed (free autocomplete
+// + optional DeepSeek enrichment / AI-search). Does not create anything.
+router.post("/keywords/suggest", requireAuth, async (req, res): Promise<void> => {
+  const seed = typeof req.body?.seed === "string" ? req.body.seed.trim() : "";
+  if (!seed) { res.status(400).json({ error: "seed is required" }); return; }
+  const location = typeof req.body?.location === "string" ? req.body.location : undefined;
+  const includeAiSearch = req.body?.includeAiSearch === true;
+  const maxIdeas = Number.isInteger(req.body?.maxIdeas) ? Math.min(50, Math.max(1, req.body.maxIdeas)) : 25;
+  try {
+    const result = await suggestKeywords(seed, { location, maxIdeas, includeAiSearch });
+    res.json(result);
+  } catch (err) {
+    (req as typeof req & { log?: { error: (o: unknown, m: string) => void } }).log?.error(
+      { err, seed }, "keyword suggest failed",
+    );
+    res.status(502).json({ error: "Keyword suggestion failed — please retry." });
+  }
 });
 
 export default router;

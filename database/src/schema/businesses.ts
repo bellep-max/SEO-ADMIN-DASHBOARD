@@ -17,6 +17,9 @@ export const businessesTable = pgTable("businesses", {
   isSab: boolean("is_sab").notNull().default(false),
   serviceArea: text("service_area"),
   createdBy: text("created_by"),
+  // Linked LocalFalcon location (manual link) — scopes Falcon reports/scans to this client.
+  localFalconPlaceId: text("local_falcon_place_id"),
+  localFalconName: text("local_falcon_name"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

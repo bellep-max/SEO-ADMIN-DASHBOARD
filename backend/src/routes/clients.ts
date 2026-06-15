@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { IRouter } from "express";
 import { db, clientsTable, campaignsTable, keywordsTable, backlinksTable, businessesTable, plansTable, activityLogTable } from "@workspace/db";
-import { eq, ilike, or, sql, count } from "drizzle-orm";
+import { eq, ilike, or, sql, count, inArray } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import {
   ListClientsQueryParams,
@@ -186,7 +186,7 @@ router.get("/clients/:id/keywords", requireAuth, async (req, res): Promise<void>
   if (campaignIds.length === 0) { res.json([]); return; }
 
   const keywords = await db.select().from(keywordsTable).where(
-    sql`${keywordsTable.campaignId} = ANY(${sql.raw(`ARRAY[${campaignIds.join(",")}]`)})`
+    inArray(keywordsTable.campaignId, campaignIds)
   );
   const campaignMap = new Map(campaigns.map(c => [c.id, c.name]));
 

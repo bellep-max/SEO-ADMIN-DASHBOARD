@@ -20,6 +20,7 @@ import {
 import type { Client, Campaign, Keyword, Backlink, Plan } from "@workspace/api-client-react";
 import { AddKeywordDialog } from "@/components/add-keyword-dialog";
 import { GeoGridHeatmap } from "@/components/geo-grid-heatmap";
+import { LocalFalconClient } from "@/components/localfalcon-client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -118,6 +119,8 @@ type BusinessProfile = {
   gmbUrl: string | null;
   isSab: boolean | null;
   serviceArea: string | null;
+  localFalconPlaceId?: string | null;
+  localFalconName?: string | null;
 };
 
 type BusinessForm = {
@@ -505,6 +508,9 @@ export default function ClientDetail() {
           </TabsTrigger>
           <TabsTrigger value="heatmap">
             Heatmap
+          </TabsTrigger>
+          <TabsTrigger value="localfalcon">
+            Local Rankings
           </TabsTrigger>
         </TabsList>
 
@@ -1259,6 +1265,14 @@ export default function ClientDetail() {
             clientName={client.name}
             campaigns={campaigns ?? []}
             businesses={businesses}
+          />
+        </TabsContent>
+
+        {/* ── Local Rankings (LocalFalcon, scoped to this client) ── */}
+        <TabsContent value="localfalcon" className="mt-4">
+          <LocalFalconClient
+            businesses={businesses}
+            onLinked={() => queryClient.invalidateQueries({ queryKey: bizKey })}
           />
         </TabsContent>
       </Tabs>

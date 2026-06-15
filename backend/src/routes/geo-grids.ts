@@ -1,9 +1,25 @@
 import { Router } from "express";
 import type { IRouter } from "express";
-import { db, geoGridConfigsTable, geoGridResultsTable, campaignsTable, businessesTable } from "@workspace/db";
+import { db, geoGridConfigsTable, geoGridResultsTable, campaignsTable, businessesTable, clientsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
+import { serpRank, serpConfigured } from "../lib/serp";
 const router: IRouter = Router();
+
+// Run `fn` over items with bounded concurrency (keeps a 5x5 grid = 25 Serper
+// calls fast without hammering the API). Results stay index-aligned with input.
+async function mapPool<T, R>(items: T[], limit: number, fn: (item: T, idx: number) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let next = 0;
+  async function worker(): Promise<void> {
+    while (next < items.length) {
+      const idx = next++;
+      out[idx] = await fn(items[idx], idx);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return out;
+}
 
 function parseId(raw: unknown): number {
   const r = Array.isArray(raw) ? raw[0] : raw;
@@ -25,16 +41,15 @@ function generateGridPoints(centerLat: number, centerLng: number, radiusMiles: n
   return points;
 }
 
-// Simulate a rank for a given distance from center (for demo use)
-function simulateRank(row: number, col: number, gridSize: number): number {
-  const centerRow = (gridSize - 1) / 2;
-  const centerCol = (gridSize - 1) / 2;
-  const dist = Math.sqrt((row - centerRow) ** 2 + (col - centerCol) ** 2);
-  const maxDist = Math.sqrt(2) * centerRow;
-  const normalizedDist = dist / maxDist;
-  const baseRank = Math.round(1 + normalizedDist * 28);
-  const jitter = Math.floor(Math.random() * 6) - 3;
-  return Math.max(1, Math.min(30, baseRank + jitter));
+// Resolve the target domain for a config: the linked business's website wins,
+// else the client's website. Returns null when neither is set.
+async function resolveDomain(cfg: typeof geoGridConfigsTable.$inferSelect): Promise<string | null> {
+  if (cfg.businessId) {
+    const [b] = await db.select({ website: businessesTable.website }).from(businessesTable).where(eq(businessesTable.id, cfg.businessId));
+    if (b?.website) return b.website;
+  }
+  const [c] = await db.select({ websiteUrl: clientsTable.websiteUrl }).from(clientsTable).where(eq(clientsTable.id, cfg.clientId));
+  return c?.websiteUrl ?? null;
 }
 
 async function formatConfig(cfg: typeof geoGridConfigsTable.$inferSelect) {
@@ -104,27 +119,52 @@ router.get("/geo-grids/:id/results", requireAuth, async (req, res): Promise<void
   res.json(results.map(r => ({ ...r, generatedAt: r.generatedAt.toISOString() })));
 });
 
-// POST /geo-grids/:id/generate  — simulate rank scan
+// POST /geo-grids/:id/generate  — run a live SERP rank scan across the grid
 router.post("/geo-grids/:id/generate", requireAuth, async (req, res): Promise<void> => {
   const id = parseId(req.params.id);
   const [cfg] = await db.select().from(geoGridConfigsTable).where(eq(geoGridConfigsTable.id, id));
   if (!cfg) { res.status(404).json({ error: "Grid config not found" }); return; }
 
+  if (!serpConfigured()) {
+    res.status(503).json({ error: "Rank measurement is not configured (SERP_API_KEY missing)." });
+    return;
+  }
+  const domain = await resolveDomain(cfg);
+  if (!domain) {
+    res.status(400).json({ error: "No website set for this client/business — add a website to measure ranks." });
+    return;
+  }
+
   const points = generateGridPoints(cfg.centerLat, cfg.centerLng, cfg.radiusMiles, cfg.gridSize);
+
+  // Measure a real SERP rank for each grid point (its own lat/lng drives the
+  // local-pack proximity ranking). Local/map-pack rank wins for "near me"
+  // queries; fall back to organic; null when the target isn't found at all.
+  const ranks = await mapPool(points, 5, async (p): Promise<number | null> => {
+    try {
+      const { organic, local } = await serpRank(cfg.keyword, { lat: p.lat, lng: p.lng }, domain);
+      return local ?? organic;
+    } catch (err) {
+      (req as typeof req & { log?: { warn: (o: unknown, m: string) => void } }).log?.warn(
+        { err, lat: p.lat, lng: p.lng }, "serp rank failed for grid point",
+      );
+      return null;
+    }
+  });
 
   // Clear old results for this config
   await db.delete(geoGridResultsTable).where(eq(geoGridResultsTable.configId, id));
 
-  // Insert new simulated results
+  // Insert the freshly measured results
   const now = new Date();
   await db.insert(geoGridResultsTable).values(
-    points.map(p => ({
+    points.map((p, idx) => ({
       configId: id,
       gridRow: p.row,
       gridCol: p.col,
       lat: p.lat,
       lng: p.lng,
-      rank: simulateRank(p.row, p.col, cfg.gridSize),
+      rank: ranks[idx],
       generatedAt: now,
     }))
   );
