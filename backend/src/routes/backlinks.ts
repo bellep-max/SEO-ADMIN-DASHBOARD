@@ -76,17 +76,18 @@ router.get("/backlinks/chart", requireAuth, async (req, res): Promise<void> => {
   const params = GetBacklinksChartQueryParams.safeParse(req.query);
   const clientId = params.success ? params.data.clientId : undefined;
 
-  const whereClause = clientId ? `AND b.client_id = ${clientId}` : "";
-  const result = await db.execute(sql.raw(`
+  // Parameterized: clientId is bound, never string-interpolated into the SQL.
+  const clientFilter = clientId != null ? sql` AND b.client_id = ${clientId}` : sql``;
+  const result = await db.execute(sql`
     SELECT
       TO_CHAR(DATE_TRUNC('day', gs.day), 'YYYY-MM-DD') AS date,
       COUNT(CASE WHEN b.status = 'new' THEN 1 END)::int AS "newCount",
       COUNT(CASE WHEN b.status = 'lost' THEN 1 END)::int AS "lostCount"
     FROM GENERATE_SERIES(NOW() - INTERVAL '29 days', NOW(), '1 day'::interval) AS gs(day)
-    LEFT JOIN backlinks b ON DATE_TRUNC('day', b.first_detected) = DATE_TRUNC('day', gs.day) ${whereClause}
+    LEFT JOIN backlinks b ON DATE_TRUNC('day', b.first_detected) = DATE_TRUNC('day', gs.day)${clientFilter}
     GROUP BY gs.day
     ORDER BY gs.day
-  `));
+  `);
 
   res.json(GetBacklinksChartResponse.parse(result.rows));
 });

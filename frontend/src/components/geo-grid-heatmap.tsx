@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -141,6 +144,55 @@ function GridDisplay({ config, results }: { config: GeoGridConfig; results: GeoG
   );
 }
 
+// Colored rank pin as a Leaflet divIcon (no image assets → bundler-safe).
+function rankDivIcon(rank: number | null, isCenter: boolean): L.DivIcon {
+  const { bg, text } = getRankColor(rank);
+  const d = 30;
+  return L.divIcon({
+    className: "geo-rank-pin",
+    iconSize: [d, d],
+    iconAnchor: [d / 2, d / 2],
+    html: `<div style="width:${d}px;height:${d}px;border-radius:50%;background:${bg};color:${text};
+      display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;
+      border:${isCenter ? "3px solid #2563eb" : "2px solid rgba(255,255,255,0.85)"};
+      box-shadow:0 1px 4px rgba(0,0,0,0.4);">${rankLabel(rank)}</div>`,
+  });
+}
+
+// Pan/zoom the map so every grid point is visible.
+function FitToResults({ results }: { results: GeoGridResult[] }) {
+  const map = useMap();
+  if (results.length > 0) {
+    const bounds = L.latLngBounds(results.map((r) => [r.lat, r.lng] as [number, number]));
+    map.fitBounds(bounds, { padding: [28, 28], maxZoom: 15 });
+  }
+  return null;
+}
+
+// Real street-map heatmap: OpenStreetMap tiles with a colored rank pin per cell.
+function MapDisplay({ config, results }: { config: GeoGridConfig; results: GeoGridResult[] }) {
+  const center: [number, number] = [config.centerLat, config.centerLng];
+  const mid = Math.floor(config.gridSize / 2);
+  return (
+    <div style={{ width: "100%", height: 300, borderRadius: 10, overflow: "hidden", border: "1px solid #1e293b" }}>
+      <MapContainer center={center} zoom={12} style={{ width: "100%", height: "100%" }} scrollWheelZoom={false} attributionControl={false}>
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <FitToResults results={results} />
+        {results.map((r) => (
+          <Marker
+            key={r.id}
+            position={[r.lat, r.lng]}
+            icon={rankDivIcon(r.rank, r.gridRow === mid && r.gridCol === mid)}
+            zIndexOffset={r.rank == null ? 0 : 500 - (r.rank ?? 0)}
+          >
+            <Tooltip>{`${config.keyword} — rank ${r.rank ?? "not ranked"}`}</Tooltip>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+}
+
 function ReportCard({
   config,
   results,
@@ -163,6 +215,7 @@ function ReportCard({
   onClick: () => void;
 }) {
   const hasData = results.length > 0;
+  const [view, setView] = useState<"map" | "grid">("map");
   const date = config.lastGeneratedAt
     ? new Date(config.lastGeneratedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
     : "Not generated";
@@ -240,9 +293,30 @@ function ReportCard({
         )}
       </div>
 
-      {/* Grid */}
+      {/* Map / Grid view toggle */}
+      <div style={{ padding: "0 14px 8px", display: "flex", gap: 4 }} onClick={(e) => e.stopPropagation()}>
+        {(["map", "grid"] as const).map((v) => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            style={{
+              flex: 1, padding: "4px 0", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em",
+              borderRadius: 6, border: "1px solid #1e293b", cursor: "pointer",
+              background: view === v ? "#3b82f6" : "#1e293b", color: view === v ? "#fff" : "#94a3b8",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+            }}
+          >
+            {v === "map" ? <Map style={{ width: 12, height: 12 }} /> : <MapPin style={{ width: 12, height: 12 }} />}
+            {v}
+          </button>
+        ))}
+      </div>
+
+      {/* Heatmap: real OSM map when generated, else the grid placeholder */}
       <div style={{ padding: "0 14px 10px", display: "flex", justifyContent: "center" }}>
-        <GridDisplay config={config} results={results} />
+        {view === "map" && hasData
+          ? <MapDisplay config={config} results={results} />
+          : <GridDisplay config={config} results={results} />}
       </div>
 
       {/* Stats row */}
