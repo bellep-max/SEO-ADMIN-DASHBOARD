@@ -8,7 +8,34 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Link2 } from "lucide-react";
+import { Loader2, Link2, Sparkles, Search, Check } from "lucide-react";
+
+type KeywordIdea = {
+  keyword: string;
+  popularity: number | null;
+  intent: string;
+  commercialIntent: number;
+  reasoning: string;
+  aiSearch: boolean;
+};
+
+function authFetch(url: string, opts?: RequestInit) {
+  const token = localStorage.getItem("seo_admin_token") ?? "";
+  return fetch(url, {
+    ...opts,
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(opts?.headers ?? {}) },
+  }).then(async (res) => {
+    if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));
+    return res.json();
+  });
+}
+
+const INTENT_COLOR: Record<string, string> = {
+  transactional: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400",
+  commercial: "bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400",
+  navigational: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400",
+  informational: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
+};
 
 const LINK_TYPE_OPTIONS = [
   "Guest Post",
@@ -55,6 +82,65 @@ export function AddKeywordDialog({ open, onClose, campaigns, defaultCampaignId, 
 
   const selectedCampaign = campaigns.find(c => c.id.toString() === form.campaignId);
 
+  // --- keyword idea generation ---
+  const [showIdeas, setShowIdeas] = useState(false);
+  const [seed, setSeed] = useState("");
+  const [ideaLoc, setIdeaLoc] = useState("");
+  const [includeAi, setIncludeAi] = useState(false);
+  const [finding, setFinding] = useState(false);
+  const [ideas, setIdeas] = useState<KeywordIdea[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [adding, setAdding] = useState(false);
+
+  const openIdeas = () => {
+    setShowIdeas(true);
+    if (!seed) setSeed(form.keywordText.trim() || selectedCampaign?.name || "");
+    if (!ideaLoc) setIdeaLoc(selectedCampaign?.targetLocation ?? "");
+  };
+
+  const findIdeas = async () => {
+    if (!seed.trim()) return;
+    setFinding(true);
+    setIdeas([]);
+    setSelected(new Set());
+    try {
+      const r = await authFetch("/api/keywords/suggest", {
+        method: "POST",
+        body: JSON.stringify({ seed: seed.trim(), location: ideaLoc.trim(), maxIdeas: 25, includeAiSearch: includeAi }),
+      });
+      const merged: KeywordIdea[] = [...(r.ideas ?? []), ...(r.aiSearch ?? [])];
+      setIdeas(merged);
+      if (merged.length === 0) toast({ title: "No ideas found", description: "Try a broader seed term." });
+      else if (!r.enriched) toast({ title: `${merged.length} ideas`, description: "AI labels off (no DeepSeek key)." });
+    } catch (err) {
+      toast({ title: "Couldn't fetch ideas", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setFinding(false);
+    }
+  };
+
+  const toggleSel = (kw: string) =>
+    setSelected(s => { const n = new Set(s); n.has(kw) ? n.delete(kw) : n.add(kw); return n; });
+
+  const addSelected = async () => {
+    if (!form.campaignId) { setErrors(e => ({ ...e, campaignId: "Select a campaign" })); return; }
+    if (selected.size === 0) return;
+    setAdding(true);
+    try {
+      await authFetch("/api/keywords/bulk", {
+        method: "POST",
+        body: JSON.stringify({ campaignId: parseInt(form.campaignId), keywords: [...selected] }),
+      });
+      toast({ title: `Added ${selected.size} keyword${selected.size > 1 ? "s" : ""}` });
+      onCreated();
+      handleClose();
+    } catch (err) {
+      toast({ title: "Failed to add keywords", description: (err as Error).message, variant: "destructive" });
+    } finally {
+      setAdding(false);
+    }
+  };
+
   const validate = () => {
     const errs: Record<string, string> = {};
     if (!form.campaignId) errs.campaignId = "Select a campaign";
@@ -69,6 +155,8 @@ export function AddKeywordDialog({ open, onClose, campaigns, defaultCampaignId, 
   const reset = () => {
     setForm({ ...EMPTY_FORM, campaignId: defaultCampaignId?.toString() ?? "" });
     setErrors({});
+    setShowIdeas(false); setSeed(""); setIdeaLoc(""); setIncludeAi(false);
+    setIdeas([]); setSelected(new Set());
   };
 
   const handleClose = () => { reset(); onClose(); };
@@ -183,7 +271,75 @@ export function AddKeywordDialog({ open, onClose, campaigns, defaultCampaignId, 
               className={errors.keywordText ? "border-destructive" : ""}
             />
             {errors.keywordText && <p className="text-xs text-destructive">{errors.keywordText}</p>}
+            {!showIdeas && (
+              <button type="button" onClick={openIdeas}
+                className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline">
+                <Sparkles className="w-3.5 h-3.5" /> Suggest keywords
+              </button>
+            )}
           </div>
+
+          {showIdeas && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-3">
+              <div className="flex items-center gap-2 text-primary">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="text-[11px] font-semibold uppercase tracking-wider">Keyword Ideas</span>
+              </div>
+
+              <div className="flex gap-2">
+                <Input value={seed} onChange={e => setSeed(e.target.value)} placeholder="Seed, e.g. roofing contractor"
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); findIdeas(); } }} className="flex-1" />
+                <Input value={ideaLoc} onChange={e => setIdeaLoc(e.target.value)} placeholder="Location (optional)" className="w-40" />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <Switch checked={includeAi} onCheckedChange={setIncludeAi} />
+                  Include AI questions
+                </label>
+                <Button type="button" size="sm" onClick={findIdeas} disabled={finding || !seed.trim()}>
+                  {finding ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" /> : <Search className="w-3.5 h-3.5 mr-1.5" />}
+                  Find ideas
+                </Button>
+              </div>
+
+              {ideas.length > 0 && (
+                <>
+                  <div className="max-h-64 overflow-y-auto rounded-md border bg-background divide-y">
+                    {ideas.map(idea => {
+                      const sel = selected.has(idea.keyword);
+                      return (
+                        <button type="button" key={idea.keyword} onClick={() => toggleSel(idea.keyword)}
+                          className={`w-full flex items-start gap-2 px-3 py-2 text-left hover:bg-muted/50 ${sel ? "bg-primary/5" : ""}`}>
+                          <span className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${sel ? "bg-primary border-primary text-primary-foreground" : "border-muted-foreground/40"}`}>
+                            {sel && <Check className="w-3 h-3" />}
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-sm font-medium text-foreground">{idea.keyword}</span>
+                              {idea.aiSearch
+                                ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400">AI</span>
+                                : <span className={`text-[10px] px-1.5 py-0.5 rounded ${INTENT_COLOR[idea.intent] ?? INTENT_COLOR.informational}`}>{idea.intent}</span>}
+                              {idea.popularity != null && (
+                                <span className="text-[10px] text-muted-foreground">pop {Math.round(idea.popularity * 100)}</span>
+                              )}
+                            </span>
+                            {idea.reasoning && <span className="block text-[11px] text-muted-foreground mt-0.5">{idea.reasoning}</span>}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+                    <Button type="button" size="sm" onClick={addSelected} disabled={adding || selected.size === 0}>
+                      {adding && <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />}
+                      Add {selected.size > 0 ? selected.size : ""} selected
+                    </Button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="akd-type">Keyword Types <span className="text-destructive">*</span></Label>

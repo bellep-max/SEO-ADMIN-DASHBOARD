@@ -4,6 +4,7 @@ import { db, keywordsTable, keywordRankHistoryTable, campaignsTable, clientsTabl
 import { eq, sql } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
 import { serpRank, serpConfigured } from "../lib/serp";
+import { suggestKeywords } from "../lib/keyword-ideas";
 import {
   ListKeywordsQueryParams,
   ListKeywordsResponse,
@@ -196,6 +197,25 @@ router.post("/keywords/:id/refresh", requireAuth, async (req, res): Promise<void
   await db.insert(keywordRankHistoryTable).values({ keywordId: id, rank: newRank });
 
   res.json(RefreshKeywordRankResponse.parse(await formatKeyword(updated)));
+});
+
+// POST /keywords/suggest — generate keyword ideas from a seed (free autocomplete
+// + optional DeepSeek enrichment / AI-search). Does not create anything.
+router.post("/keywords/suggest", requireAuth, async (req, res): Promise<void> => {
+  const seed = typeof req.body?.seed === "string" ? req.body.seed.trim() : "";
+  if (!seed) { res.status(400).json({ error: "seed is required" }); return; }
+  const location = typeof req.body?.location === "string" ? req.body.location : undefined;
+  const includeAiSearch = req.body?.includeAiSearch === true;
+  const maxIdeas = Number.isInteger(req.body?.maxIdeas) ? Math.min(50, Math.max(1, req.body.maxIdeas)) : 25;
+  try {
+    const result = await suggestKeywords(seed, { location, maxIdeas, includeAiSearch });
+    res.json(result);
+  } catch (err) {
+    (req as typeof req & { log?: { error: (o: unknown, m: string) => void } }).log?.error(
+      { err, seed }, "keyword suggest failed",
+    );
+    res.status(502).json({ error: "Keyword suggestion failed — please retry." });
+  }
 });
 
 export default router;
