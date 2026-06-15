@@ -59,7 +59,7 @@ router.get("/businesses/:id", requireAuth, async (req, res): Promise<void> => {
 
 router.patch("/businesses/:id", requireAuth, async (req, res): Promise<void> => {
   const id = parseId(req.params.id);
-  const { businessName, address, phone, website, category, hours, gmbUrl, zipCode, isSab, serviceArea, createdBy } = req.body;
+  const { businessName, address, phone, website, category, hours, gmbUrl, zipCode, isSab, serviceArea, createdBy, localFalconPlaceId, localFalconName } = req.body;
   const updateData: Partial<typeof businessesTable.$inferInsert> = {};
   if (businessName !== undefined) updateData.businessName = businessName;
   if (address !== undefined) updateData.address = address;
@@ -72,6 +72,8 @@ router.patch("/businesses/:id", requireAuth, async (req, res): Promise<void> => 
   if (isSab !== undefined) updateData.isSab = isSab === true || isSab === "true";
   if (serviceArea !== undefined) updateData.serviceArea = serviceArea || null;
   if (createdBy !== undefined) updateData.createdBy = createdBy;
+  if (localFalconPlaceId !== undefined) updateData.localFalconPlaceId = localFalconPlaceId || null;
+  if (localFalconName !== undefined) updateData.localFalconName = localFalconName || null;
   const [business] = await db.update(businessesTable).set(updateData).where(eq(businessesTable.id, id)).returning();
   if (!business) { res.status(404).json({ error: "Business not found" }); return; }
   res.json(formatBusiness(business));
